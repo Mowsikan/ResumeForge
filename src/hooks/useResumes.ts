@@ -30,7 +30,14 @@ export const useResumes = () => {
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
-      setResumes(data || []);
+      
+      // Type cast the data to match our Resume interface
+      const typedResumes = (data || []).map(resume => ({
+        ...resume,
+        resume_data: resume.resume_data as ResumeData
+      }));
+      
+      setResumes(typedResumes);
     } catch (error) {
       console.error('Error fetching resumes:', error);
       toast({
@@ -50,7 +57,7 @@ export const useResumes = () => {
       const payload = {
         user_id: user.id,
         title: title || 'Untitled Resume',
-        resume_data: resumeData,
+        resume_data: resumeData as any, // Cast to any to satisfy Json type
         template_id: 'modern',
         updated_at: new Date().toISOString(),
       };
