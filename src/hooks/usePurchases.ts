@@ -25,6 +25,7 @@ export const usePurchases = () => {
     }
     
     try {
+      console.log('Fetching purchases for user:', user.id);
       const { data, error } = await supabase
         .from('purchases')
         .select('*')
@@ -33,14 +34,24 @@ export const usePurchases = () => {
 
       if (error) throw error;
       
+      console.log('Fetched purchases:', data);
       setPurchases(data || []);
       
       // Check if user has any valid downloads remaining
       const hasValidPurchases = (data || []).some(purchase => {
         const isNotExpired = !purchase.expires_at || new Date(purchase.expires_at) > new Date();
-        return purchase.downloads_remaining > 0 && isNotExpired;
+        const hasDownloads = purchase.downloads_remaining > 0;
+        console.log('Purchase check:', {
+          id: purchase.id,
+          downloads_remaining: purchase.downloads_remaining,
+          isNotExpired,
+          hasDownloads,
+          expires_at: purchase.expires_at
+        });
+        return hasDownloads && isNotExpired;
       });
       
+      console.log('Can download:', hasValidPurchases);
       setCanDownload(hasValidPurchases);
     } catch (error) {
       console.error('Error fetching purchases:', error);
@@ -78,6 +89,32 @@ export const usePurchases = () => {
       return false;
     }
   };
+
+  // Set up real-time subscription to listen for purchase updates
+  useEffect(() => {
+    if (!user) return;
+
+    const subscription = supabase
+      .channel('purchases_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'purchases',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('Purchase updated via real-time:', payload);
+          fetchPurchases();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [user]);
 
   useEffect(() => {
     fetchPurchases();

@@ -37,7 +37,7 @@ export interface ResumeData {
 const Builder = () => {
   const { user } = useAuth();
   const { resumes, saveResume, deleteResume, loading } = useResumes();
-  const { canDownload, consumeDownload } = usePurchases();
+  const { canDownload, consumeDownload, refreshPurchases } = usePurchases();
   const { toast } = useToast();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
@@ -63,6 +63,23 @@ const Builder = () => {
       setShowAuthModal(true);
     }
   }, [user, loading]);
+
+  // Listen for successful payments and refresh purchases
+  useEffect(() => {
+    const handlePaymentSuccess = () => {
+      console.log('Payment success event detected, refreshing purchases...');
+      setTimeout(() => {
+        refreshPurchases();
+      }, 1000); // Small delay to ensure payment is processed
+    };
+
+    // Listen for custom payment success events
+    window.addEventListener('paymentSuccess', handlePaymentSuccess);
+    
+    return () => {
+      window.removeEventListener('paymentSuccess', handlePaymentSuccess);
+    };
+  }, [refreshPurchases]);
 
   const handleInputChange = (field: keyof ResumeData, value: string) => {
     setResumeData(prev => ({ ...prev, [field]: value }));
@@ -268,6 +285,14 @@ const Builder = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handlePricingModalClose = () => {
+    setShowPricingModal(false);
+    // Refresh purchases when modal closes in case payment was completed
+    setTimeout(() => {
+      refreshPurchases();
+    }, 500);
   };
 
   if (!user) {
@@ -589,7 +614,7 @@ const Builder = () => {
       
       <PricingModal
         isOpen={showPricingModal}
-        onClose={() => setShowPricingModal(false)}
+        onClose={handlePricingModalClose}
       />
     </div>
   );
