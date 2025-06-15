@@ -31,10 +31,10 @@ export const useResumes = () => {
 
       if (error) throw error;
       
-      // Type cast the data to match our Resume interface
+      // Type cast the data to match our Resume interface using unknown as intermediate
       const typedResumes = (data || []).map(resume => ({
         ...resume,
-        resume_data: resume.resume_data as ResumeData
+        resume_data: resume.resume_data as unknown as ResumeData
       }));
       
       setResumes(typedResumes);
