@@ -15,9 +15,17 @@ serve(async (req) => {
   try {
     const { razorpay_payment_id, razorpay_order_id, razorpay_signature, purchase_id } = await req.json()
     
+    console.log('Payment verification started:', { 
+      razorpay_payment_id, 
+      razorpay_order_id, 
+      purchase_id,
+      timestamp: new Date().toISOString()
+    })
+
     // Get the authorization header
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      console.error('No authorization header provided')
       throw new Error('No authorization header')
     }
 
@@ -35,20 +43,23 @@ serve(async (req) => {
     // Get the current user
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
     if (userError || !user) {
+      console.error('User authentication failed:', userError)
       throw new Error('User not authenticated')
     }
 
+    console.log('User authenticated:', user.id)
+
     const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET')
     if (!razorpayKeySecret) {
+      console.error('Razorpay key secret not configured')
       throw new Error('Razorpay key secret not configured')
     }
-
-    console.log('Verifying payment:', { razorpay_payment_id, razorpay_order_id, purchase_id })
 
     // Verify payment with Razorpay
     const razorpayKeyId = 'rzp_live_RbZjUu8cORJ4Pw'
     
     try {
+      console.log('Verifying payment with Razorpay...')
       const paymentResponse = await fetch(`https://api.razorpay.com/v1/payments/${razorpay_payment_id}`, {
         method: 'GET',
         headers: {
@@ -67,6 +78,7 @@ serve(async (req) => {
       console.log('Payment verified with Razorpay:', paymentDetails.status)
 
       if (paymentDetails.status !== 'captured' && paymentDetails.status !== 'authorized') {
+        console.error('Payment status invalid:', paymentDetails.status)
         throw new Error('Payment not successful')
       }
 
@@ -75,20 +87,30 @@ serve(async (req) => {
       throw new Error('Failed to verify payment with Razorpay')
     }
 
-    // First, check if purchase exists and get its current status
+    // Check if purchase exists and get its current status
+    console.log('Fetching purchase record...')
     const { data: existingPurchase, error: fetchError } = await supabaseClient
       .from('purchases')
       .select('*')
       .eq('id', purchase_id)
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
 
-    if (fetchError || !existingPurchase) {
-      console.error('Purchase not found:', fetchError)
+    if (fetchError) {
+      console.error('Error fetching purchase:', fetchError)
+      throw new Error(`Failed to fetch purchase: ${fetchError.message}`)
+    }
+
+    if (!existingPurchase) {
+      console.error('Purchase not found for user:', { purchase_id, user_id: user.id })
       throw new Error('Purchase record not found')
     }
 
-    console.log('Found existing purchase:', existingPurchase.id, 'Status:', existingPurchase.status)
+    console.log('Found purchase:', {
+      id: existingPurchase.id,
+      status: existingPurchase.status,
+      user_id: existingPurchase.user_id
+    })
 
     // Check if already completed to avoid duplicate processing
     if (existingPurchase.status === 'completed') {
@@ -102,7 +124,8 @@ serve(async (req) => {
       )
     }
 
-    // Update purchase record with payment details - using a more specific approach
+    // Update purchase record with payment details
+    console.log('Updating purchase to completed status...')
     const { data: updatedPurchases, error: updateError } = await supabaseClient
       .from('purchases')
       .update({
@@ -115,7 +138,13 @@ serve(async (req) => {
       .select()
 
     if (updateError) {
-      console.error('Purchase update error:', updateError)
+      console.error('Purchase update error details:', {
+        error: updateError,
+        purchase_id,
+        user_id: user.id,
+        code: updateError.code,
+        message: updateError.message
+      })
       
       // Check if the purchase was already updated by another request
       const { data: recheckPurchase } = await supabaseClient
@@ -123,10 +152,10 @@ serve(async (req) => {
         .select('*')
         .eq('id', purchase_id)
         .eq('user_id', user.id)
-        .single()
+        .maybeSingle()
       
       if (recheckPurchase && recheckPurchase.status === 'completed') {
-        console.log('Purchase was completed by another request')
+        console.log('Purchase was completed by another request during update attempt')
         return new Response(
           JSON.stringify({ success: true, purchase: recheckPurchase }),
           {
@@ -149,7 +178,7 @@ serve(async (req) => {
         .select('*')
         .eq('id', purchase_id)
         .eq('user_id', user.id)
-        .single()
+        .maybeSingle()
       
       if (currentPurchase && currentPurchase.status === 'completed') {
         console.log('Purchase is already completed')
@@ -161,12 +190,17 @@ serve(async (req) => {
           },
         )
       } else {
+        console.error('Purchase update failed - no rows affected and status not completed')
         throw new Error('Purchase update failed - no rows affected')
       }
     }
 
     const updatedPurchase = updatedPurchases[0]
-    console.log('Purchase updated successfully:', updatedPurchase.id)
+    console.log('Purchase updated successfully:', {
+      id: updatedPurchase.id,
+      status: updatedPurchase.status,
+      razorpay_payment_id: updatedPurchase.razorpay_payment_id
+    })
 
     return new Response(
       JSON.stringify({ success: true, purchase: updatedPurchase }),
@@ -176,7 +210,11 @@ serve(async (req) => {
       },
     )
   } catch (error) {
-    console.error('Verify payment error:', error)
+    console.error('Verify payment error:', {
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    })
     return new Response(
       JSON.stringify({ 
         error: error.message,
