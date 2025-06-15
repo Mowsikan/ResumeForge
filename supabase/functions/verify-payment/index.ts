@@ -102,8 +102,8 @@ serve(async (req) => {
       )
     }
 
-    // Update purchase record with payment details
-    const { data: updatedPurchase, error: updateError } = await supabaseClient
+    // Update purchase record with payment details - using a more specific approach
+    const { data: updatedPurchases, error: updateError } = await supabaseClient
       .from('purchases')
       .update({
         razorpay_payment_id,
@@ -111,9 +111,8 @@ serve(async (req) => {
       })
       .eq('id', purchase_id)
       .eq('user_id', user.id)
-      .eq('status', 'pending') // Only update if still pending to avoid race conditions
+      .eq('status', 'pending')
       .select()
-      .single()
 
     if (updateError) {
       console.error('Purchase update error:', updateError)
@@ -140,6 +139,33 @@ serve(async (req) => {
       throw new Error(`Failed to update purchase: ${updateError.message}`)
     }
 
+    // Check if any rows were actually updated
+    if (!updatedPurchases || updatedPurchases.length === 0) {
+      console.log('No rows updated - purchase may have been processed already')
+      
+      // Get the current state of the purchase
+      const { data: currentPurchase } = await supabaseClient
+        .from('purchases')
+        .select('*')
+        .eq('id', purchase_id)
+        .eq('user_id', user.id)
+        .single()
+      
+      if (currentPurchase && currentPurchase.status === 'completed') {
+        console.log('Purchase is already completed')
+        return new Response(
+          JSON.stringify({ success: true, purchase: currentPurchase }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          },
+        )
+      } else {
+        throw new Error('Purchase update failed - no rows affected')
+      }
+    }
+
+    const updatedPurchase = updatedPurchases[0]
     console.log('Purchase updated successfully:', updatedPurchase.id)
 
     return new Response(
