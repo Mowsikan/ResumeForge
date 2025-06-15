@@ -20,6 +20,26 @@ declare global {
   }
 }
 
+const loadRazorpayScript = (): Promise<boolean> => {
+  return new Promise((resolve) => {
+    // Check if Razorpay is already loaded
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => {
+      resolve(true);
+    };
+    script.onerror = () => {
+      resolve(false);
+    };
+    document.body.appendChild(script);
+  });
+};
+
 export const PaymentModal = ({ isOpen, onClose, plan }: PaymentModalProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -55,6 +75,13 @@ export const PaymentModal = ({ isOpen, onClose, plan }: PaymentModalProps) => {
     setIsProcessing(true);
     
     try {
+      // Load Razorpay script first
+      const isScriptLoaded = await loadRazorpayScript();
+      
+      if (!isScriptLoaded) {
+        throw new Error('Failed to load Razorpay SDK');
+      }
+
       // Create order using Edge Function
       const { data: orderData, error: orderError } = await supabase.functions.invoke('create-order', {
         body: {
@@ -129,7 +156,7 @@ export const PaymentModal = ({ isOpen, onClose, plan }: PaymentModalProps) => {
       console.error('Payment Error:', error);
       toast({
         title: "Payment Failed",
-        description: "There was an error processing your payment. Please try again.",
+        description: error instanceof Error ? error.message : "There was an error processing your payment. Please try again.",
         variant: "destructive"
       });
     } finally {
