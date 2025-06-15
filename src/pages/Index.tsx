@@ -77,8 +77,8 @@ const Index = () => {
             </div>
             <nav className="hidden md:flex space-x-8">
               <a href="#features" className="text-gray-600 hover:text-gray-900 transition-colors">Features</a>
-              <a href="#templates" className="text-gray-600 hover:text-gray-900 transition-colors">Templates</a>
-              <a href="#pricing" className="text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
+              <Link to="/templates" className="text-gray-600 hover:text-gray-900 transition-colors">Templates</Link>
+              <Link to="/pricing" className="text-gray-600 hover:text-gray-900 transition-colors">Pricing</Link>
             </nav>
             <Link to="/builder">
               <Button className="bg-gradient-primary hover:opacity-90 transition-opacity">
@@ -174,6 +174,14 @@ const Index = () => {
                 </CardContent>
               </Card>
             ))}
+          </div>
+          <div className="text-center mt-8">
+            <Link to="/templates">
+              <Button variant="outline" size="lg">
+                View All Templates
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
