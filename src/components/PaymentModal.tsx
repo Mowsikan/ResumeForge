@@ -120,102 +120,91 @@ export const PaymentModal = ({ isOpen, onClose, plan }: PaymentModalProps) => {
       // Close our modal before opening Razorpay to prevent conflicts
       onClose();
 
-      const options = {
-        key: 'rzp_live_RbZjUu8cORJ4Pw',
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: 'ResumeForge',
-        description: selectedPlan.description,
-        image: '/logo.png',
-        order_id: orderData.order_id,
-        handler: async function (response: any) {
-          console.log('Payment successful, response:', response);
-          try {
-            console.log('Verifying payment...');
-            // Verify payment using Edge Function
-            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-payment', {
-              body: {
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-                purchase_id: orderData.purchase_id
+      // Add a small delay to ensure our modal is fully closed
+      setTimeout(() => {
+        const options = {
+          key: 'rzp_live_RbZjUu8cORJ4Pw',
+          amount: orderData.amount,
+          currency: orderData.currency,
+          name: 'ResumeForge',
+          description: selectedPlan.description,
+          image: '/logo.png',
+          order_id: orderData.order_id,
+          handler: async function (response: any) {
+            console.log('Payment successful, response:', response);
+            try {
+              console.log('Verifying payment...');
+              // Verify payment using Edge Function
+              const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-payment', {
+                body: {
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_signature: response.razorpay_signature,
+                  purchase_id: orderData.purchase_id
+                }
+              });
+
+              console.log('Payment verification response:', { verifyData, verifyError });
+
+              if (verifyError) {
+                console.error('Payment verification error:', verifyError);
+                throw new Error(`Payment verification failed: ${verifyError.message}`);
               }
-            });
 
-            console.log('Payment verification response:', { verifyData, verifyError });
-
-            if (verifyError) {
-              console.error('Payment verification error:', verifyError);
-              throw new Error(`Payment verification failed: ${verifyError.message}`);
+              toast({
+                title: "Payment Successful!",
+                description: `Your ${selectedPlan.name} has been activated. You can now download your resume.`,
+              });
+              console.log('Payment process completed successfully');
+            } catch (error) {
+              console.error('Payment verification error:', error);
+              toast({
+                title: "Payment Verification Failed",
+                description: "Please contact support if money was deducted.",
+                variant: "destructive"
+              });
             }
-
-            toast({
-              title: "Payment Successful!",
-              description: `Your ${selectedPlan.name} has been activated. You can now download your resume.`,
-            });
-            console.log('Payment process completed successfully');
-          } catch (error) {
-            console.error('Payment verification error:', error);
-            toast({
-              title: "Payment Verification Failed",
-              description: "Please contact support if money was deducted.",
-              variant: "destructive"
-            });
-          }
-        },
-        prefill: {
-          name: user.user_metadata?.full_name || '',
-          email: user.email || '',
-          contact: ''
-        },
-        notes: {
-          plan: plan,
-          user_id: user.id,
-          timestamp: new Date().toISOString()
-        },
-        theme: {
-          color: '#667eea'
-        },
-        modal: {
-          ondismiss: function() {
-            console.log('Payment modal dismissed by user');
-            setIsProcessing(false);
           },
-          // Add these properties to ensure proper modal behavior
-          escape: true,
-          backdropclose: false,
-          // Ensure modal is positioned correctly
-          animation: true
-        },
-        // Add retry configuration
-        retry: {
-          enabled: true,
-          max_count: 3
-        },
-        // Ensure proper z-index and positioning
-        config: {
-          display: {
-            language: 'en'
+          prefill: {
+            name: user.user_metadata?.full_name || '',
+            email: user.email || '',
+            contact: ''
+          },
+          notes: {
+            plan: plan,
+            user_id: user.id,
+            timestamp: new Date().toISOString()
+          },
+          theme: {
+            color: '#667eea'
+          },
+          modal: {
+            ondismiss: function() {
+              console.log('Payment modal dismissed by user');
+              setIsProcessing(false);
+            },
+            escape: true,
+            backdropclose: true
           }
-        }
-      };
+        };
 
-      console.log('Creating Razorpay instance...');
-      const razorpay = new window.Razorpay(options);
-      
-      // Add error handler for razorpay
-      razorpay.on('payment.failed', function (response: any) {
-        console.error('Payment failed:', response.error);
-        setIsProcessing(false);
-        toast({
-          title: "Payment Failed",
-          description: response.error.description || "Payment failed. Please try again.",
-          variant: "destructive"
+        console.log('Creating Razorpay instance...');
+        const razorpay = new window.Razorpay(options);
+        
+        // Add error handler for razorpay
+        razorpay.on('payment.failed', function (response: any) {
+          console.error('Payment failed:', response.error);
+          setIsProcessing(false);
+          toast({
+            title: "Payment Failed",
+            description: response.error.description || "Payment failed. Please try again.",
+            variant: "destructive"
+          });
         });
-      });
 
-      console.log('Opening Razorpay checkout...');
-      razorpay.open();
+        console.log('Opening Razorpay checkout...');
+        razorpay.open();
+      }, 100); // Small delay to ensure modal closure
       
     } catch (error) {
       console.error('Payment Error:', error);
