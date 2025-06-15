@@ -117,6 +117,9 @@ export const PaymentModal = ({ isOpen, onClose, plan }: PaymentModalProps) => {
         order_id: orderData.order_id
       });
 
+      // Close our modal before opening Razorpay to prevent conflicts
+      onClose();
+
       const options = {
         key: 'rzp_live_RbZjUu8cORJ4Pw',
         amount: orderData.amount,
@@ -151,7 +154,6 @@ export const PaymentModal = ({ isOpen, onClose, plan }: PaymentModalProps) => {
               description: `Your ${selectedPlan.name} has been activated. You can now download your resume.`,
             });
             console.log('Payment process completed successfully');
-            onClose();
           } catch (error) {
             console.error('Payment verification error:', error);
             toast({
@@ -178,12 +180,40 @@ export const PaymentModal = ({ isOpen, onClose, plan }: PaymentModalProps) => {
           ondismiss: function() {
             console.log('Payment modal dismissed by user');
             setIsProcessing(false);
+          },
+          // Add these properties to ensure proper modal behavior
+          escape: true,
+          backdropclose: false,
+          // Ensure modal is positioned correctly
+          animation: true
+        },
+        // Add retry configuration
+        retry: {
+          enabled: true,
+          max_count: 3
+        },
+        // Ensure proper z-index and positioning
+        config: {
+          display: {
+            language: 'en'
           }
         }
       };
 
       console.log('Creating Razorpay instance...');
       const razorpay = new window.Razorpay(options);
+      
+      // Add error handler for razorpay
+      razorpay.on('payment.failed', function (response: any) {
+        console.error('Payment failed:', response.error);
+        setIsProcessing(false);
+        toast({
+          title: "Payment Failed",
+          description: response.error.description || "Payment failed. Please try again.",
+          variant: "destructive"
+        });
+      });
+
       console.log('Opening Razorpay checkout...');
       razorpay.open();
       
