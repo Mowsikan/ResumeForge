@@ -1,5 +1,5 @@
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Download, Star, Zap, CreditCard, Shield } from "lucide-react";
@@ -89,6 +89,10 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
         throw new Error('No order data received from server');
       }
 
+      // Reset any body styles that might interfere
+      document.body.style.zIndex = '';
+      document.body.style.position = '';
+
       const options = {
         key: 'rzp_live_RbZjUu8cORJ4Pw',
         amount: orderData.amount,
@@ -116,6 +120,8 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
               title: "Payment Successful!",
               description: `Your ${selectedPlan.name} has been activated. You can now download your resume.`,
             });
+
+            onClose();
           } catch (error) {
             toast({
               title: "Payment Verification Failed",
@@ -137,29 +143,37 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
         theme: {
           color: '#667eea'
         },
+        config: {
+          display: {
+            language: 'en'
+          }
+        },
         modal: {
           ondismiss: function() {
             setIsProcessing(false);
           },
-          escape: true,
-          backdropclose: true,
-          confirm_close: true,
+          escape: false,
+          backdropclose: false,
+          confirm_close: false,
           animation: true
         }
       };
 
-      const razorpay = new window.Razorpay(options);
-      
-      razorpay.on('payment.failed', function (response: any) {
-        setIsProcessing(false);
-        toast({
-          title: "Payment Failed",
-          description: response.error.description || "Payment failed. Please try again.",
-          variant: "destructive"
+      // Small delay to ensure sheet is properly closed before opening Razorpay
+      setTimeout(() => {
+        const razorpay = new window.Razorpay(options);
+        
+        razorpay.on('payment.failed', function (response: any) {
+          setIsProcessing(false);
+          toast({
+            title: "Payment Failed",
+            description: response.error.description || "Payment failed. Please try again.",
+            variant: "destructive"
+          });
         });
-      });
 
-      razorpay.open();
+        razorpay.open();
+      }, 100);
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "There was an error processing your payment. Please try again.";
@@ -199,14 +213,14 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl">
-        <DialogHeader>
-          <DialogTitle className="text-2xl text-center">Choose Your Plan</DialogTitle>
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent className="w-full sm:max-w-6xl overflow-y-auto">
+        <SheetHeader className="mb-6">
+          <SheetTitle className="text-2xl text-center">Choose Your Plan</SheetTitle>
           <p className="text-center text-gray-600">Unlock professional resume features</p>
-        </DialogHeader>
+        </SheetHeader>
         
-        <div className="grid md:grid-cols-3 gap-6 mt-6">
+        <div className="grid md:grid-cols-3 gap-6">
           {/* Free Plan */}
           <Card className="border-2 border-gray-200">
             <CardHeader className="text-center">
@@ -323,7 +337,7 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
             <span>Secured by Razorpay • By purchasing, you agree to our Terms of Service</span>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 };
