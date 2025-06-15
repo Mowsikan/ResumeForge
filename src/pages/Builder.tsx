@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,16 +9,10 @@ import { ResumePreview } from "@/components/ResumePreview";
 import { PricingModal } from "@/components/PricingModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useResumes } from "@/hooks/useResumes";
+import { usePurchases } from "@/hooks/usePurchases";
 import { AuthModal } from "@/components/AuthModal";
 import { Download, Save, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export interface ResumeData {
   fullName: string;
@@ -44,6 +37,7 @@ export interface ResumeData {
 const Builder = () => {
   const { user } = useAuth();
   const { resumes, saveResume, deleteResume, loading } = useResumes();
+  const { canDownload, consumeDownload } = usePurchases();
   const { toast } = useToast();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
@@ -164,12 +158,116 @@ const Builder = () => {
     setCurrentResumeId(null);
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!user) {
       setShowAuthModal(true);
       return;
     }
-    setShowPricingModal(true);
+
+    if (!canDownload) {
+      setShowPricingModal(true);
+      return;
+    }
+
+    // Generate PDF download
+    try {
+      const success = await consumeDownload();
+      if (success) {
+        // Create a simple PDF download using print functionality
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          printWindow.document.write(`
+            <html>
+              <head>
+                <title>Resume - ${resumeData.fullName}</title>
+                <style>
+                  body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+                  .header { text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 20px; margin-bottom: 20px; }
+                  .name { font-size: 28px; font-weight: bold; margin-bottom: 10px; }
+                  .contact { color: #666; }
+                  .section { margin-bottom: 25px; }
+                  .section-title { font-size: 18px; font-weight: bold; border-bottom: 2px solid #3b82f6; padding-bottom: 5px; margin-bottom: 15px; }
+                  .experience-item, .education-item { margin-bottom: 15px; }
+                  .position { font-weight: bold; }
+                  .company { color: #3b82f6; font-weight: 500; }
+                  .duration { color: #666; font-size: 14px; }
+                  .skills { display: flex; flex-wrap: wrap; gap: 10px; }
+                  .skill { background: #eff6ff; color: #1d4ed8; padding: 5px 10px; border-radius: 15px; font-size: 14px; }
+                </style>
+              </head>
+              <body>
+                <div class="header">
+                  <div class="name">${resumeData.fullName}</div>
+                  <div class="contact">${resumeData.email} • ${resumeData.phone} • ${resumeData.location}</div>
+                </div>
+                
+                ${resumeData.summary ? `
+                <div class="section">
+                  <div class="section-title">Professional Summary</div>
+                  <p>${resumeData.summary}</p>
+                </div>
+                ` : ''}
+                
+                ${resumeData.experience.length > 0 ? `
+                <div class="section">
+                  <div class="section-title">Work Experience</div>
+                  ${resumeData.experience.map(exp => `
+                    <div class="experience-item">
+                      <div class="position">${exp.position}</div>
+                      <div class="company">${exp.company}</div>
+                      <div class="duration">${exp.duration}</div>
+                      ${exp.description ? `<p>${exp.description}</p>` : ''}
+                    </div>
+                  `).join('')}
+                </div>
+                ` : ''}
+                
+                ${resumeData.education.length > 0 ? `
+                <div class="section">
+                  <div class="section-title">Education</div>
+                  ${resumeData.education.map(edu => `
+                    <div class="education-item">
+                      <div class="position">${edu.degree}</div>
+                      <div class="company">${edu.school}</div>
+                      <div class="duration">${edu.year}</div>
+                    </div>
+                  `).join('')}
+                </div>
+                ` : ''}
+                
+                ${resumeData.skills.length > 0 ? `
+                <div class="section">
+                  <div class="section-title">Skills</div>
+                  <div class="skills">
+                    ${resumeData.skills.map(skill => `<span class="skill">${skill}</span>`).join('')}
+                  </div>
+                </div>
+                ` : ''}
+              </body>
+            </html>
+          `);
+          printWindow.document.close();
+          printWindow.print();
+        }
+        
+        toast({
+          title: "Success",
+          description: "Resume downloaded successfully!",
+        });
+      } else {
+        toast({
+          title: "Download Failed",
+          description: "Unable to process download. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Download Failed",
+        description: "An error occurred while downloading your resume.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!user) {
@@ -216,9 +314,12 @@ const Builder = () => {
               <Save className="w-4 h-4 mr-2" />
               Save
             </Button>
-            <Button onClick={handleDownload} className="bg-gradient-primary hover:opacity-90">
+            <Button 
+              onClick={handleDownload} 
+              className={canDownload ? "bg-gradient-primary hover:opacity-90" : "bg-gray-400"}
+            >
               <Download className="w-4 h-4 mr-2" />
-              Download PDF
+              {canDownload ? "Download PDF" : "Buy to Download"}
             </Button>
           </div>
         </div>

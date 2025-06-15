@@ -7,30 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Function to verify Razorpay signature
-function verifyRazorpaySignature(
-  razorpayOrderId: string,
-  razorpayPaymentId: string,
-  razorpaySignature: string,
-  secret: string
-): boolean {
-  const text = razorpayOrderId + "|" + razorpayPaymentId
-  const expectedSignature = btoa(
-    String.fromCharCode(
-      ...new Uint8Array(
-        Array.from(
-          new TextEncoder().encode(secret),
-          (byte, i) => byte ^ new TextEncoder().encode(text)[i % text.length]
-        )
-      )
-    )
-  )
-  
-  // For production, use proper HMAC verification
-  // This is a simplified version - in production you should use crypto.subtle
-  return razorpaySignature === expectedSignature
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -67,10 +43,9 @@ serve(async (req) => {
       throw new Error('Razorpay key secret not configured')
     }
 
-    console.log('Verifying payment:', { razorpay_payment_id, razorpay_order_id })
+    console.log('Verifying payment:', { razorpay_payment_id, razorpay_order_id, purchase_id })
 
-    // In production, you should verify the signature properly using crypto.subtle
-    // For now, we'll fetch the payment details from Razorpay to verify
+    // Verify payment with Razorpay
     const razorpayKeyId = 'rzp_live_RbZjUu8cORJ4Pw'
     
     try {
@@ -99,6 +74,21 @@ serve(async (req) => {
       console.error('Payment verification error:', verificationError)
       throw new Error('Failed to verify payment with Razorpay')
     }
+
+    // First, check if purchase exists
+    const { data: existingPurchase, error: fetchError } = await supabaseClient
+      .from('purchases')
+      .select('*')
+      .eq('id', purchase_id)
+      .eq('user_id', user.id)
+      .single()
+
+    if (fetchError || !existingPurchase) {
+      console.error('Purchase not found:', fetchError)
+      throw new Error('Purchase record not found')
+    }
+
+    console.log('Found existing purchase:', existingPurchase.id)
 
     // Update purchase record
     const { data: purchase, error: updateError } = await supabaseClient
