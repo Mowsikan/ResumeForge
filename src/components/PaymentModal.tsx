@@ -117,11 +117,15 @@ export const PaymentModal = ({ isOpen, onClose, plan }: PaymentModalProps) => {
         order_id: orderData.order_id
       });
 
-      // Close our modal before opening Razorpay to prevent conflicts
+      // Close our modal before opening Razorpay
       onClose();
 
-      // Add a small delay to ensure our modal is fully closed
+      // Add delay and remove any potential CSS conflicts
       setTimeout(() => {
+        // Remove any z-index styles that might interfere
+        document.body.style.position = '';
+        document.body.style.overflow = '';
+        
         const options = {
           key: 'rzp_live_RbZjUu8cORJ4Pw',
           amount: orderData.amount,
@@ -166,9 +170,9 @@ export const PaymentModal = ({ isOpen, onClose, plan }: PaymentModalProps) => {
             }
           },
           prefill: {
-            name: user.user_metadata?.full_name || '',
+            name: user.user_metadata?.full_name || user.email?.split('@')[0] || '',
             email: user.email || '',
-            contact: ''
+            contact: user.user_metadata?.phone || ''
           },
           notes: {
             plan: plan,
@@ -184,7 +188,33 @@ export const PaymentModal = ({ isOpen, onClose, plan }: PaymentModalProps) => {
               setIsProcessing(false);
             },
             escape: true,
-            backdropclose: true
+            backdropclose: false,
+            confirm_close: true,
+            animation: true
+          },
+          config: {
+            display: {
+              blocks: {
+                banks: {
+                  name: 'Pay using UPI & more',
+                  instruments: [
+                    {
+                      method: 'upi'
+                    },
+                    {
+                      method: 'card'
+                    },
+                    {
+                      method: 'netbanking'
+                    }
+                  ]
+                }
+              },
+              sequence: ['block.banks'],
+              preferences: {
+                show_default_blocks: true
+              }
+            }
           }
         };
 
@@ -204,7 +234,7 @@ export const PaymentModal = ({ isOpen, onClose, plan }: PaymentModalProps) => {
 
         console.log('Opening Razorpay checkout...');
         razorpay.open();
-      }, 100); // Small delay to ensure modal closure
+      }, 200); // Slightly longer delay
       
     } catch (error) {
       console.error('Payment Error:', error);
