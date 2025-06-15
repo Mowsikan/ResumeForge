@@ -24,16 +24,20 @@ const loadRazorpayScript = (): Promise<boolean> => {
   return new Promise((resolve) => {
     // Check if Razorpay is already loaded
     if (window.Razorpay) {
+      console.log('Razorpay already loaded');
       resolve(true);
       return;
     }
 
+    console.log('Loading Razorpay script...');
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.onload = () => {
+      console.log('Razorpay script loaded successfully');
       resolve(true);
     };
     script.onerror = () => {
+      console.error('Failed to load Razorpay script');
       resolve(false);
     };
     document.body.appendChild(script);
@@ -63,7 +67,10 @@ export const PaymentModal = ({ isOpen, onClose, plan }: PaymentModalProps) => {
   const selectedPlan = planDetails[plan];
 
   const handlePayment = async () => {
+    console.log('Payment initiated for plan:', plan);
+    
     if (!user) {
+      console.log('User not authenticated');
       toast({
         title: "Authentication Required",
         description: "Please sign in to continue with payment.",
@@ -75,13 +82,16 @@ export const PaymentModal = ({ isOpen, onClose, plan }: PaymentModalProps) => {
     setIsProcessing(true);
     
     try {
+      console.log('Loading Razorpay script...');
       // Load Razorpay script first
       const isScriptLoaded = await loadRazorpayScript();
       
       if (!isScriptLoaded) {
+        console.error('Razorpay script failed to load');
         throw new Error('Failed to load Razorpay SDK');
       }
 
+      console.log('Creating order via edge function...');
       // Create order using Edge Function
       const { data: orderData, error: orderError } = await supabase.functions.invoke('create-order', {
         body: {
@@ -90,7 +100,22 @@ export const PaymentModal = ({ isOpen, onClose, plan }: PaymentModalProps) => {
         }
       });
 
-      if (orderError) throw orderError;
+      console.log('Order creation response:', { orderData, orderError });
+
+      if (orderError) {
+        console.error('Order creation error:', orderError);
+        throw new Error(`Order creation failed: ${orderError.message}`);
+      }
+
+      if (!orderData) {
+        console.error('No order data received');
+        throw new Error('No order data received from server');
+      }
+
+      console.log('Initializing Razorpay with options:', {
+        amount: orderData.amount,
+        order_id: orderData.order_id
+      });
 
       const options = {
         key: 'rzp_live_RbZjUu8cORJ4Pw',
@@ -101,7 +126,9 @@ export const PaymentModal = ({ isOpen, onClose, plan }: PaymentModalProps) => {
         image: '/logo.png',
         order_id: orderData.order_id,
         handler: async function (response: any) {
+          console.log('Payment successful, response:', response);
           try {
+            console.log('Verifying payment...');
             // Verify payment using Edge Function
             const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-payment', {
               body: {
@@ -112,13 +139,18 @@ export const PaymentModal = ({ isOpen, onClose, plan }: PaymentModalProps) => {
               }
             });
 
-            if (verifyError) throw verifyError;
+            console.log('Payment verification response:', { verifyData, verifyError });
+
+            if (verifyError) {
+              console.error('Payment verification error:', verifyError);
+              throw new Error(`Payment verification failed: ${verifyError.message}`);
+            }
 
             toast({
               title: "Payment Successful!",
               description: `Your ${selectedPlan.name} has been activated. You can now download your resume.`,
             });
-            console.log('Payment Success:', response);
+            console.log('Payment process completed successfully');
             onClose();
           } catch (error) {
             console.error('Payment verification error:', error);
@@ -144,19 +176,25 @@ export const PaymentModal = ({ isOpen, onClose, plan }: PaymentModalProps) => {
         },
         modal: {
           ondismiss: function() {
+            console.log('Payment modal dismissed by user');
             setIsProcessing(false);
           }
         }
       };
 
+      console.log('Creating Razorpay instance...');
       const razorpay = new window.Razorpay(options);
+      console.log('Opening Razorpay checkout...');
       razorpay.open();
       
     } catch (error) {
       console.error('Payment Error:', error);
+      const errorMessage = error instanceof Error ? error.message : "There was an error processing your payment. Please try again.";
+      console.error('Showing error toast:', errorMessage);
+      
       toast({
         title: "Payment Failed",
-        description: error instanceof Error ? error.message : "There was an error processing your payment. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
