@@ -1,8 +1,7 @@
 
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Download, Star, Zap, CreditCard, Shield } from "lucide-react";
+import { Check, Download, Star, Zap, CreditCard, Shield, X } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +37,8 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
+
+  if (!isOpen) return null;
 
   const planDetails = {
     single: {
@@ -89,9 +90,8 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
         throw new Error('No order data received from server');
       }
 
-      // Reset any body styles that might interfere
-      document.body.style.zIndex = '';
-      document.body.style.position = '';
+      // Close the pricing section before opening Razorpay
+      onClose();
 
       const options = {
         key: 'rzp_live_RbZjUu8cORJ4Pw',
@@ -120,8 +120,6 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
               title: "Payment Successful!",
               description: `Your ${selectedPlan.name} has been activated. You can now download your resume.`,
             });
-
-            onClose();
           } catch (error) {
             toast({
               title: "Payment Verification Failed",
@@ -152,28 +150,25 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
           ondismiss: function() {
             setIsProcessing(false);
           },
-          escape: false,
-          backdropclose: false,
-          confirm_close: false,
+          escape: true,
+          backdropclose: true,
+          confirm_close: true,
           animation: true
         }
       };
 
-      // Small delay to ensure sheet is properly closed before opening Razorpay
-      setTimeout(() => {
-        const razorpay = new window.Razorpay(options);
-        
-        razorpay.on('payment.failed', function (response: any) {
-          setIsProcessing(false);
-          toast({
-            title: "Payment Failed",
-            description: response.error.description || "Payment failed. Please try again.",
-            variant: "destructive"
-          });
+      const razorpay = new window.Razorpay(options);
+      
+      razorpay.on('payment.failed', function (response: any) {
+        setIsProcessing(false);
+        toast({
+          title: "Payment Failed",
+          description: response.error.description || "Payment failed. Please try again.",
+          variant: "destructive"
         });
+      });
 
-        razorpay.open();
-      }, 100);
+      razorpay.open();
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "There was an error processing your payment. Please try again.";
@@ -213,131 +208,143 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-6xl overflow-y-auto">
-        <SheetHeader className="mb-6">
-          <SheetTitle className="text-2xl text-center">Choose Your Plan</SheetTitle>
-          <p className="text-center text-gray-600">Unlock professional resume features</p>
-        </SheetHeader>
-        
-        <div className="grid md:grid-cols-3 gap-6">
-          {/* Free Plan */}
-          <Card className="border-2 border-gray-200">
-            <CardHeader className="text-center">
-              <CardTitle className="flex items-center justify-center gap-2">
-                <Star className="w-5 h-5 text-yellow-500" />
-                Free Preview
-              </CardTitle>
-              <div className="text-3xl font-bold text-gray-900">₹0</div>
-              <p className="text-gray-600">Perfect for exploring</p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ul className="space-y-2">
-                {features.free.map((feature, index) => (
-                  <li key={index} className="flex items-center gap-3">
-                    <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    <span className="text-sm text-gray-600">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={onClose}
-              >
-                Continue Free
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Single Download Plan */}
-          <Card className="border-2 border-green-200">
-            <CardHeader className="text-center">
-              <CardTitle className="flex items-center justify-center gap-2">
-                <Download className="w-5 h-5 text-green-500" />
-                Single Download
-              </CardTitle>
-              <div className="text-3xl font-bold text-gray-900">₹5</div>
-              <p className="text-gray-600">One-time download</p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ul className="space-y-2">
-                {features.single.map((feature, index) => (
-                  <li key={index} className="flex items-center gap-3">
-                    <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    <span className="text-sm text-gray-700">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <Button 
-                className="w-full bg-green-600 hover:bg-green-700"
-                onClick={() => handlePayment('single')}
-                disabled={isProcessing}
-              >
-                <CreditCard className="w-4 h-4 mr-2" />
-                {isProcessing ? 'Processing...' : 'Buy for ₹5'}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Professional Plan */}
-          <Card className="border-2 border-blue-500 shadow-lg relative">
-            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-              <span className="bg-gradient-primary text-white px-4 py-1 rounded-full text-sm font-medium">
-                Best Value
-              </span>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-40">
+      <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <div className="text-center flex-1">
+              <h2 className="text-2xl font-bold">Choose Your Plan</h2>
+              <p className="text-gray-600">Unlock professional resume features</p>
             </div>
-            <CardHeader className="text-center">
-              <CardTitle className="flex items-center justify-center gap-2">
-                <Zap className="w-5 h-5 text-blue-500" />
-                Professional Pack
-              </CardTitle>
-              <div className="text-3xl font-bold text-gray-900">₹20</div>
-              <div className="text-sm text-gray-500 line-through">₹50</div>
-              <p className="text-gray-600">10 downloads • 60% off</p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ul className="space-y-2">
-                {features.professional.map((feature, index) => (
-                  <li key={index} className="flex items-center gap-3">
-                    <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    <span className="text-sm text-gray-700">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <Button 
-                className="w-full bg-gradient-primary hover:opacity-90"
-                onClick={() => handlePayment('professional')}
-                disabled={isProcessing}
-              >
-                <CreditCard className="w-4 h-4 mr-2" />
-                {isProcessing ? 'Processing...' : 'Buy Pack - ₹20'}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="ml-4"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-6">
+            {/* Free Plan */}
+            <Card className="border-2 border-gray-200">
+              <CardHeader className="text-center">
+                <CardTitle className="flex items-center justify-center gap-2">
+                  <Star className="w-5 h-5 text-yellow-500" />
+                  Free Preview
+                </CardTitle>
+                <div className="text-3xl font-bold text-gray-900">₹0</div>
+                <p className="text-gray-600">Perfect for exploring</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <ul className="space-y-2">
+                  {features.free.map((feature, index) => (
+                    <li key={index} className="flex items-center gap-3">
+                      <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      <span className="text-sm text-gray-600">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={onClose}
+                >
+                  Continue Free
+                </Button>
+              </CardContent>
+            </Card>
 
-        <div className="mt-6 text-center">
-          <div className="flex items-center justify-center gap-4 text-sm text-gray-600 mb-4">
-            <div className="flex items-center gap-1">
-              <Check className="w-4 h-4 text-green-500" />
-              <span>Secure Payment</span>
+            {/* Single Download Plan */}
+            <Card className="border-2 border-green-200">
+              <CardHeader className="text-center">
+                <CardTitle className="flex items-center justify-center gap-2">
+                  <Download className="w-5 h-5 text-green-500" />
+                  Single Download
+                </CardTitle>
+                <div className="text-3xl font-bold text-gray-900">₹5</div>
+                <p className="text-gray-600">One-time download</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <ul className="space-y-2">
+                  {features.single.map((feature, index) => (
+                    <li key={index} className="flex items-center gap-3">
+                      <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      <span className="text-sm text-gray-700">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button 
+                  className="w-full bg-green-600 hover:bg-green-700"
+                  onClick={() => handlePayment('single')}
+                  disabled={isProcessing}
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  {isProcessing ? 'Processing...' : 'Buy for ₹5'}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Professional Plan */}
+            <Card className="border-2 border-blue-500 shadow-lg relative">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <span className="bg-gradient-primary text-white px-4 py-1 rounded-full text-sm font-medium">
+                  Best Value
+                </span>
+              </div>
+              <CardHeader className="text-center">
+                <CardTitle className="flex items-center justify-center gap-2">
+                  <Zap className="w-5 h-5 text-blue-500" />
+                  Professional Pack
+                </CardTitle>
+                <div className="text-3xl font-bold text-gray-900">₹20</div>
+                <div className="text-sm text-gray-500 line-through">₹50</div>
+                <p className="text-gray-600">10 downloads • 60% off</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <ul className="space-y-2">
+                  {features.professional.map((feature, index) => (
+                    <li key={index} className="flex items-center gap-3">
+                      <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      <span className="text-sm text-gray-700">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button 
+                  className="w-full bg-gradient-primary hover:opacity-90"
+                  onClick={() => handlePayment('professional')}
+                  disabled={isProcessing}
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  {isProcessing ? 'Processing...' : 'Buy Pack - ₹20'}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="mt-6 text-center">
+            <div className="flex items-center justify-center gap-4 text-sm text-gray-600 mb-4">
+              <div className="flex items-center gap-1">
+                <Check className="w-4 h-4 text-green-500" />
+                <span>Secure Payment</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Check className="w-4 h-4 text-green-500" />
+                <span>Instant Download</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Check className="w-4 h-4 text-green-500" />
+                <span>Money Back Guarantee</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1">
-              <Check className="w-4 h-4 text-green-500" />
-              <span>Instant Download</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Check className="w-4 h-4 text-green-500" />
-              <span>Money Back Guarantee</span>
+            <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+              <Shield className="w-4 h-4" />
+              <span>Secured by Razorpay • By purchasing, you agree to our Terms of Service</span>
             </div>
           </div>
-          <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-            <Shield className="w-4 h-4" />
-            <span>Secured by Razorpay • By purchasing, you agree to our Terms of Service</span>
-          </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </div>
+    </div>
   );
 };
