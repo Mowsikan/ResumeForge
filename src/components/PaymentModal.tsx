@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Check, CreditCard, Shield, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -20,6 +22,7 @@ declare global {
 
 export const PaymentModal = ({ isOpen, onClose, plan }: PaymentModalProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
 
   const planDetails = {
@@ -40,33 +43,73 @@ export const PaymentModal = ({ isOpen, onClose, plan }: PaymentModalProps) => {
   const selectedPlan = planDetails[plan];
 
   const handlePayment = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to continue with payment.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsProcessing(true);
     
     try {
-      // Note: In production, order creation should happen on backend
+      // Create order using Edge Function
+      const { data: orderData, error: orderError } = await supabase.functions.invoke('create-order', {
+        body: {
+          plan_type: plan,
+          amount: selectedPlan.price
+        }
+      });
+
+      if (orderError) throw orderError;
+
       const options = {
-        key: 'rzp_live_RbZjUu8cORJ4Pw', // Your Razorpay key
-        amount: selectedPlan.price * 100, // Amount in paise
-        currency: selectedPlan.currency,
+        key: 'rzp_live_RbZjUu8cORJ4Pw',
+        amount: orderData.amount,
+        currency: orderData.currency,
         name: 'ResumeForge',
         description: selectedPlan.description,
         image: '/logo.png',
-        order_id: `order_${Date.now()}`, // This should come from backend
-        handler: function (response: any) {
-          toast({
-            title: "Payment Successful!",
-            description: `Your ${selectedPlan.name} has been activated. You can now download your resume.`,
-          });
-          console.log('Payment Success:', response);
-          onClose();
+        order_id: orderData.order_id,
+        handler: async function (response: any) {
+          try {
+            // Verify payment using Edge Function
+            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-payment', {
+              body: {
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                purchase_id: orderData.purchase_id
+              }
+            });
+
+            if (verifyError) throw verifyError;
+
+            toast({
+              title: "Payment Successful!",
+              description: `Your ${selectedPlan.name} has been activated. You can now download your resume.`,
+            });
+            console.log('Payment Success:', response);
+            onClose();
+          } catch (error) {
+            console.error('Payment verification error:', error);
+            toast({
+              title: "Payment Verification Failed",
+              description: "Please contact support if money was deducted.",
+              variant: "destructive"
+            });
+          }
         },
         prefill: {
-          name: 'John Doe',
-          email: 'john@example.com',
-          contact: '9999999999'
+          name: user.user_metadata?.full_name || '',
+          email: user.email || '',
+          contact: ''
         },
         notes: {
           plan: plan,
+          user_id: user.id,
           timestamp: new Date().toISOString()
         },
         theme: {

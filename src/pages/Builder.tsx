@@ -1,15 +1,25 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowLeft, Download, Eye } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { ResumePreview } from "@/components/ResumePreview";
 import { PricingModal } from "@/components/PricingModal";
+import { useAuth } from "@/hooks/useAuth";
+import { useResumes } from "@/hooks/useResumes";
+import { AuthModal } from "@/components/AuthModal";
+import { Download, Save, Plus, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export interface ResumeData {
   fullName: string;
@@ -18,136 +28,240 @@ export interface ResumeData {
   location: string;
   summary: string;
   experience: Array<{
-    company: string;
     position: string;
+    company: string;
     duration: string;
     description: string;
   }>;
   education: Array<{
-    school: string;
     degree: string;
+    school: string;
     year: string;
   }>;
   skills: string[];
 }
 
 const Builder = () => {
+  const { user } = useAuth();
+  const { resumes, saveResume, deleteResume, loading } = useResumes();
+  const { toast } = useToast();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showPricingModal, setShowPricingModal] = useState(false);
+  const [currentResumeId, setCurrentResumeId] = useState<string | null>(null);
+  const [resumeTitle, setResumeTitle] = useState("My Resume");
+
   const [resumeData, setResumeData] = useState<ResumeData>({
-    fullName: "John Doe",
-    email: "john.doe@email.com",
-    phone: "(555) 123-4567",
-    location: "New York, NY",
-    summary: "Experienced software developer with 5+ years of expertise in full-stack development. Passionate about creating scalable web applications and leading development teams.",
-    experience: [
-      {
-        company: "Tech Corp",
-        position: "Senior Software Developer",
-        duration: "2021 - Present",
-        description: "Lead development of web applications using React and Node.js. Managed a team of 5 developers and improved system performance by 40%."
-      },
-      {
-        company: "StartupXYZ",
-        position: "Full Stack Developer",
-        duration: "2019 - 2021",
-        description: "Built responsive web applications using modern JavaScript frameworks. Collaborated with design team to implement pixel-perfect UIs."
-      }
-    ],
-    education: [
-      {
-        school: "University of Technology",
-        degree: "Bachelor of Science in Computer Science",
-        year: "2019"
-      }
-    ],
-    skills: ["JavaScript", "React", "Node.js", "Python", "SQL", "AWS", "Docker", "Git"]
+    fullName: "",
+    email: "",
+    phone: "",
+    location: "",
+    summary: "",
+    experience: [{ position: "", company: "", duration: "", description: "" }],
+    education: [{ degree: "", school: "", year: "" }],
+    skills: [],
   });
 
-  const [showPricingModal, setShowPricingModal] = useState(false);
+  const [newSkill, setNewSkill] = useState("");
 
-  const updateField = (field: keyof ResumeData, value: any) => {
+  // Check if user is authenticated
+  useEffect(() => {
+    if (!user && !loading) {
+      setShowAuthModal(true);
+    }
+  }, [user, loading]);
+
+  const handleInputChange = (field: keyof ResumeData, value: string) => {
     setResumeData(prev => ({ ...prev, [field]: value }));
   };
 
-  const updateExperience = (index: number, field: string, value: string) => {
+  const handleExperienceChange = (index: number, field: string, value: string) => {
     const newExperience = [...resumeData.experience];
     newExperience[index] = { ...newExperience[index], [field]: value };
     setResumeData(prev => ({ ...prev, experience: newExperience }));
   };
 
-  const updateEducation = (index: number, field: string, value: string) => {
+  const addExperience = () => {
+    setResumeData(prev => ({
+      ...prev,
+      experience: [...prev.experience, { position: "", company: "", duration: "", description: "" }]
+    }));
+  };
+
+  const removeExperience = (index: number) => {
+    setResumeData(prev => ({
+      ...prev,
+      experience: prev.experience.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleEducationChange = (index: number, field: string, value: string) => {
     const newEducation = [...resumeData.education];
     newEducation[index] = { ...newEducation[index], [field]: value };
     setResumeData(prev => ({ ...prev, education: newEducation }));
   };
 
-  const updateSkills = (skills: string) => {
-    const skillsArray = skills.split(',').map(skill => skill.trim()).filter(skill => skill);
-    setResumeData(prev => ({ ...prev, skills: skillsArray }));
-  };
-
-  const addExperience = () => {
-    setResumeData(prev => ({
-      ...prev,
-      experience: [...prev.experience, { company: "", position: "", duration: "", description: "" }]
-    }));
-  };
-
   const addEducation = () => {
     setResumeData(prev => ({
       ...prev,
-      education: [...prev.education, { school: "", degree: "", year: "" }]
+      education: [...prev.education, { degree: "", school: "", year: "" }]
     }));
   };
 
+  const removeEducation = (index: number) => {
+    setResumeData(prev => ({
+      ...prev,
+      education: prev.education.filter((_, i) => i !== index)
+    }));
+  };
+
+  const addSkill = () => {
+    if (newSkill.trim() && !resumeData.skills.includes(newSkill.trim())) {
+      setResumeData(prev => ({
+        ...prev,
+        skills: [...prev.skills, newSkill.trim()]
+      }));
+      setNewSkill("");
+    }
+  };
+
+  const removeSkill = (skillToRemove: string) => {
+    setResumeData(prev => ({
+      ...prev,
+      skills: prev.skills.filter(skill => skill !== skillToRemove)
+    }));
+  };
+
+  const handleSave = async () => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    const result = await saveResume(resumeData, resumeTitle, currentResumeId);
+    if (result && !currentResumeId) {
+      setCurrentResumeId(result.id);
+    }
+  };
+
+  const handleLoadResume = (resume: any) => {
+    setResumeData(resume.resume_data);
+    setResumeTitle(resume.title);
+    setCurrentResumeId(resume.id);
+  };
+
+  const handleNewResume = () => {
+    setResumeData({
+      fullName: "",
+      email: "",
+      phone: "",
+      location: "",
+      summary: "",
+      experience: [{ position: "", company: "", duration: "", description: "" }],
+      education: [{ degree: "", school: "", year: "" }],
+      skills: [],
+    });
+    setResumeTitle("My Resume");
+    setCurrentResumeId(null);
+  };
+
+  const handleDownload = () => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    setShowPricingModal(true);
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Sign in to build your resume
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Create an account to save your progress and access all features
+          </p>
+          <Button onClick={() => setShowAuthModal(true)}>
+            Sign In / Sign Up
+          </Button>
+        </div>
+        <AuthModal 
+          isOpen={showAuthModal} 
+          onClose={() => setShowAuthModal(false)} 
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <Link to="/" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-                <ArrowLeft className="w-5 h-5" />
-                <span>Back</span>
-              </Link>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">R</span>
-                </div>
-                <span className="text-xl font-bold text-gray-900">ResumeForge</span>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="hidden lg:flex">
-                    <Eye className="w-4 h-4 mr-2" />
-                    Preview
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-4xl h-[90vh]">
-                  <DialogHeader>
-                    <DialogTitle>Resume Preview</DialogTitle>
-                  </DialogHeader>
-                  <div className="overflow-auto">
-                    <ResumePreview data={resumeData} />
-                  </div>
-                </DialogContent>
-              </Dialog>
-              <Button 
-                onClick={() => setShowPricingModal(true)}
-                className="bg-gradient-primary hover:opacity-90"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download PDF
-              </Button>
-            </div>
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8 flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <Input
+              value={resumeTitle}
+              onChange={(e) => setResumeTitle(e.target.value)}
+              className="text-2xl font-bold border-none p-0 bg-transparent"
+              placeholder="Resume Title"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleNewResume}>
+              <Plus className="w-4 h-4 mr-2" />
+              New
+            </Button>
+            <Button variant="outline" onClick={handleSave}>
+              <Save className="w-4 h-4 mr-2" />
+              Save
+            </Button>
+            <Button onClick={handleDownload} className="bg-gradient-primary hover:opacity-90">
+              <Download className="w-4 h-4 mr-2" />
+              Download PDF
+            </Button>
           </div>
         </div>
-      </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid lg:grid-cols-2 gap-8">
+        {/* Saved Resumes */}
+        {resumes.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Your Saved Resumes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {resumes.map((resume) => (
+                  <div
+                    key={resume.id}
+                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                      currentResumeId === resume.id ? 'border-blue-500 bg-blue-50' : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div onClick={() => handleLoadResume(resume)}>
+                        <h3 className="font-medium">{resume.title}</h3>
+                        <p className="text-sm text-gray-500">
+                          {new Date(resume.updated_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteResume(resume.id)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Form Section */}
           <div className="space-y-6">
             {/* Personal Information */}
@@ -162,7 +276,8 @@ const Builder = () => {
                     <Input
                       id="fullName"
                       value={resumeData.fullName}
-                      onChange={(e) => updateField('fullName', e.target.value)}
+                      onChange={(e) => handleInputChange("fullName", e.target.value)}
+                      placeholder="John Doe"
                     />
                   </div>
                   <div>
@@ -171,7 +286,8 @@ const Builder = () => {
                       id="email"
                       type="email"
                       value={resumeData.email}
-                      onChange={(e) => updateField('email', e.target.value)}
+                      onChange={(e) => handleInputChange("email", e.target.value)}
+                      placeholder="john@example.com"
                     />
                   </div>
                 </div>
@@ -181,7 +297,8 @@ const Builder = () => {
                     <Input
                       id="phone"
                       value={resumeData.phone}
-                      onChange={(e) => updateField('phone', e.target.value)}
+                      onChange={(e) => handleInputChange("phone", e.target.value)}
+                      placeholder="+1 (555) 123-4567"
                     />
                   </div>
                   <div>
@@ -189,7 +306,8 @@ const Builder = () => {
                     <Input
                       id="location"
                       value={resumeData.location}
-                      onChange={(e) => updateField('location', e.target.value)}
+                      onChange={(e) => handleInputChange("location", e.target.value)}
+                      placeholder="New York, NY"
                     />
                   </div>
                 </div>
@@ -203,10 +321,10 @@ const Builder = () => {
               </CardHeader>
               <CardContent>
                 <Textarea
-                  placeholder="Write a brief summary of your professional background..."
                   value={resumeData.summary}
-                  onChange={(e) => updateField('summary', e.target.value)}
-                  rows={4}
+                  onChange={(e) => handleInputChange("summary", e.target.value)}
+                  placeholder="Write a brief summary of your professional experience and career objectives..."
+                  className="min-h-[100px]"
                 />
               </CardContent>
             </Card>
@@ -214,47 +332,51 @@ const Builder = () => {
             {/* Work Experience */}
             <Card>
               <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle>Work Experience</CardTitle>
-                  <Button onClick={addExperience} variant="outline" size="sm">
-                    Add Experience
+                <CardTitle className="flex justify-between items-center">
+                  Work Experience
+                  <Button size="sm" onClick={addExperience}>
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add
                   </Button>
-                </div>
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4">
                 {resumeData.experience.map((exp, index) => (
                   <div key={index} className="p-4 border rounded-lg space-y-3">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label>Company</Label>
-                        <Input
-                          value={exp.company}
-                          onChange={(e) => updateExperience(index, 'company', e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <Label>Position</Label>
-                        <Input
-                          value={exp.position}
-                          onChange={(e) => updateExperience(index, 'position', e.target.value)}
-                        />
-                      </div>
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-medium">Experience {index + 1}</h4>
+                      {resumeData.experience.length > 1 && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => removeExperience(index)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
-                    <div>
-                      <Label>Duration</Label>
+                    <div className="grid grid-cols-2 gap-3">
                       <Input
-                        value={exp.duration}
-                        onChange={(e) => updateExperience(index, 'duration', e.target.value)}
+                        placeholder="Position"
+                        value={exp.position}
+                        onChange={(e) => handleExperienceChange(index, "position", e.target.value)}
+                      />
+                      <Input
+                        placeholder="Company"
+                        value={exp.company}
+                        onChange={(e) => handleExperienceChange(index, "company", e.target.value)}
                       />
                     </div>
-                    <div>
-                      <Label>Description</Label>
-                      <Textarea
-                        value={exp.description}
-                        onChange={(e) => updateExperience(index, 'description', e.target.value)}
-                        rows={3}
-                      />
-                    </div>
+                    <Input
+                      placeholder="Duration (e.g., Jan 2020 - Present)"
+                      value={exp.duration}
+                      onChange={(e) => handleExperienceChange(index, "duration", e.target.value)}
+                    />
+                    <Textarea
+                      placeholder="Describe your responsibilities and achievements..."
+                      value={exp.description}
+                      onChange={(e) => handleExperienceChange(index, "description", e.target.value)}
+                    />
                   </div>
                 ))}
               </CardContent>
@@ -263,39 +385,46 @@ const Builder = () => {
             {/* Education */}
             <Card>
               <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle>Education</CardTitle>
-                  <Button onClick={addEducation} variant="outline" size="sm">
-                    Add Education
+                <CardTitle className="flex justify-between items-center">
+                  Education
+                  <Button size="sm" onClick={addEducation}>
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add
                   </Button>
-                </div>
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {resumeData.education.map((edu, index) => (
                   <div key={index} className="p-4 border rounded-lg space-y-3">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label>School</Label>
-                        <Input
-                          value={edu.school}
-                          onChange={(e) => updateEducation(index, 'school', e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <Label>Year</Label>
-                        <Input
-                          value={edu.year}
-                          onChange={(e) => updateEducation(index, 'year', e.target.value)}
-                        />
-                      </div>
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-medium">Education {index + 1}</h4>
+                      {resumeData.education.length > 1 && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => removeEducation(index)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
-                    <div>
-                      <Label>Degree</Label>
+                    <div className="grid grid-cols-2 gap-3">
                       <Input
+                        placeholder="Degree"
                         value={edu.degree}
-                        onChange={(e) => updateEducation(index, 'degree', e.target.value)}
+                        onChange={(e) => handleEducationChange(index, "degree", e.target.value)}
+                      />
+                      <Input
+                        placeholder="School"
+                        value={edu.school}
+                        onChange={(e) => handleEducationChange(index, "school", e.target.value)}
                       />
                     </div>
+                    <Input
+                      placeholder="Year (e.g., 2020)"
+                      value={edu.year}
+                      onChange={(e) => handleEducationChange(index, "year", e.target.value)}
+                    />
                   </div>
                 ))}
               </CardContent>
@@ -306,40 +435,60 @@ const Builder = () => {
               <CardHeader>
                 <CardTitle>Skills</CardTitle>
               </CardHeader>
-              <CardContent>
-                <Label>Skills (comma-separated)</Label>
-                <Textarea
-                  placeholder="JavaScript, React, Node.js, Python..."
-                  value={resumeData.skills.join(', ')}
-                  onChange={(e) => updateSkills(e.target.value)}
-                  rows={3}
-                />
+              <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Add a skill"
+                    value={newSkill}
+                    onChange={(e) => setNewSkill(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && addSkill()}
+                  />
+                  <Button onClick={addSkill}>Add</Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {resumeData.skills.map((skill, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                    >
+                      {skill}
+                      <button
+                        onClick={() => removeSkill(skill)}
+                        className="ml-1 hover:text-blue-600"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Preview Section - Desktop Only */}
-          <div className="hidden lg:block">
-            <div className="sticky top-24">
-              <Card className="h-[calc(100vh-8rem)]">
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Eye className="w-5 h-5 mr-2" />
-                    Live Preview
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0 h-full overflow-auto">
+          {/* Preview Section */}
+          <div className="lg:sticky lg:top-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Resume Preview</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-white shadow-lg" style={{ transform: 'scale(0.6)', transformOrigin: 'top left', width: '166.67%', height: '166.67%' }}>
                   <ResumePreview data={resumeData} />
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
 
-      <PricingModal 
-        isOpen={showPricingModal} 
-        onClose={() => setShowPricingModal(false)} 
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+      />
+      
+      <PricingModal
+        isOpen={showPricingModal}
+        onClose={() => setShowPricingModal(false)}
       />
     </div>
   );
