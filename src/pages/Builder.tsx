@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useResumes } from "@/hooks/useResumes";
 import { usePurchases } from "@/hooks/usePurchases";
 import { AuthModal } from "@/components/AuthModal";
-import { Download, Save, Plus, Trash2 } from "lucide-react";
+import { Download, Save, Plus, Trash2, User, MapPin, Globe, Github, Linkedin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export interface ResumeData {
@@ -19,6 +20,9 @@ export interface ResumeData {
   email: string;
   phone: string;
   location: string;
+  website: string;
+  linkedin: string;
+  github: string;
   summary: string;
   experience: Array<{
     position: string;
@@ -30,9 +34,84 @@ export interface ResumeData {
     degree: string;
     school: string;
     year: string;
+    grade: string;
   }>;
   skills: string[];
+  languages: string[];
+  certifications: Array<{
+    name: string;
+    issuer: string;
+    year: string;
+  }>;
+  projects: Array<{
+    name: string;
+    description: string;
+    technologies: string;
+    link: string;
+  }>;
 }
+
+// Default resume data with examples
+const defaultResumeData: ResumeData = {
+  fullName: "John Doe",
+  email: "john.doe@email.com",
+  phone: "+1 (555) 123-4567",
+  location: "New York, NY",
+  website: "www.johndoe.com",
+  linkedin: "linkedin.com/in/johndoe",
+  github: "github.com/johndoe",
+  summary: "Experienced software developer with 5+ years of expertise in full-stack development. Passionate about creating scalable web applications and solving complex problems. Proven track record of delivering high-quality solutions in fast-paced environments.",
+  experience: [
+    {
+      position: "Senior Software Developer",
+      company: "Tech Solutions Inc.",
+      duration: "Jan 2022 - Present",
+      description: "Led development of microservices architecture serving 1M+ users. Implemented CI/CD pipelines reducing deployment time by 60%. Mentored junior developers and conducted code reviews."
+    },
+    {
+      position: "Software Developer",
+      company: "Digital Innovations",
+      duration: "Jun 2020 - Dec 2021",
+      description: "Developed responsive web applications using React and Node.js. Collaborated with cross-functional teams to deliver features on time. Optimized database queries improving performance by 40%."
+    }
+  ],
+  education: [
+    {
+      degree: "Bachelor of Science in Computer Science",
+      school: "University of Technology",
+      year: "2020",
+      grade: "3.8 GPA"
+    }
+  ],
+  skills: ["JavaScript", "React", "Node.js", "Python", "PostgreSQL", "AWS", "Docker", "Git"],
+  languages: ["English (Native)", "Spanish (Conversational)", "French (Basic)"],
+  certifications: [
+    {
+      name: "AWS Certified Developer",
+      issuer: "Amazon Web Services",
+      year: "2023"
+    },
+    {
+      name: "React Professional Certificate",
+      issuer: "Meta",
+      year: "2022"
+    }
+  ],
+  projects: [
+    {
+      name: "E-commerce Platform",
+      description: "Built a full-stack e-commerce platform with React, Node.js, and PostgreSQL. Features include user authentication, payment processing, and admin dashboard.",
+      technologies: "React, Node.js, PostgreSQL, Stripe",
+      link: "github.com/johndoe/ecommerce"
+    },
+    {
+      name: "Task Management App",
+      description: "Developed a collaborative task management application with real-time updates using WebSocket connections.",
+      technologies: "Vue.js, Express.js, MongoDB, Socket.io",
+      link: "github.com/johndoe/taskmanager"
+    }
+  ]
+};
 
 const Builder = () => {
   const { user } = useAuth();
@@ -43,19 +122,9 @@ const Builder = () => {
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [currentResumeId, setCurrentResumeId] = useState<string | null>(null);
   const [resumeTitle, setResumeTitle] = useState("My Resume");
-
-  const [resumeData, setResumeData] = useState<ResumeData>({
-    fullName: "",
-    email: "",
-    phone: "",
-    location: "",
-    summary: "",
-    experience: [{ position: "", company: "", duration: "", description: "" }],
-    education: [{ degree: "", school: "", year: "" }],
-    skills: [],
-  });
-
+  const [resumeData, setResumeData] = useState<ResumeData>(defaultResumeData);
   const [newSkill, setNewSkill] = useState("");
+  const [newLanguage, setNewLanguage] = useState("");
 
   // Check if user is authenticated
   useEffect(() => {
@@ -70,16 +139,53 @@ const Builder = () => {
       console.log('Payment success event detected, refreshing purchases...');
       setTimeout(() => {
         refreshPurchases();
-      }, 1000); // Small delay to ensure payment is processed
+      }, 1000);
     };
 
-    // Listen for custom payment success events
     window.addEventListener('paymentSuccess', handlePaymentSuccess);
     
     return () => {
       window.removeEventListener('paymentSuccess', handlePaymentSuccess);
     };
   }, [refreshPurchases]);
+
+  // Add screenshot protection
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Disable screenshot shortcuts
+      if (e.key === 'PrintScreen' || 
+          (e.ctrlKey && e.shiftKey && e.key === 'S') ||
+          (e.metaKey && e.shiftKey && e.key === '4') ||
+          (e.metaKey && e.shiftKey && e.key === '3')) {
+        e.preventDefault();
+        toast({
+          title: "Screenshots Disabled",
+          description: "Please purchase a plan to download your resume as PDF.",
+          variant: "destructive"
+        });
+      }
+    };
+
+    const handleContextMenu = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('.resume-preview')) {
+        e.preventDefault();
+        toast({
+          title: "Right-click Disabled",
+          description: "Please purchase a plan to download your resume.",
+          variant: "destructive"
+        });
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('contextmenu', handleContextMenu);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('contextmenu', handleContextMenu);
+    };
+  }, [toast]);
 
   const handleInputChange = (field: keyof ResumeData, value: string) => {
     setResumeData(prev => ({ ...prev, [field]: value }));
@@ -114,7 +220,7 @@ const Builder = () => {
   const addEducation = () => {
     setResumeData(prev => ({
       ...prev,
-      education: [...prev.education, { degree: "", school: "", year: "" }]
+      education: [...prev.education, { degree: "", school: "", year: "", grade: "" }]
     }));
   };
 
@@ -142,6 +248,63 @@ const Builder = () => {
     }));
   };
 
+  const addLanguage = () => {
+    if (newLanguage.trim() && !resumeData.languages.includes(newLanguage.trim())) {
+      setResumeData(prev => ({
+        ...prev,
+        languages: [...prev.languages, newLanguage.trim()]
+      }));
+      setNewLanguage("");
+    }
+  };
+
+  const removeLanguage = (languageToRemove: string) => {
+    setResumeData(prev => ({
+      ...prev,
+      languages: prev.languages.filter(language => language !== languageToRemove)
+    }));
+  };
+
+  const handleCertificationChange = (index: number, field: string, value: string) => {
+    const newCertifications = [...resumeData.certifications];
+    newCertifications[index] = { ...newCertifications[index], [field]: value };
+    setResumeData(prev => ({ ...prev, certifications: newCertifications }));
+  };
+
+  const addCertification = () => {
+    setResumeData(prev => ({
+      ...prev,
+      certifications: [...prev.certifications, { name: "", issuer: "", year: "" }]
+    }));
+  };
+
+  const removeCertification = (index: number) => {
+    setResumeData(prev => ({
+      ...prev,
+      certifications: prev.certifications.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleProjectChange = (index: number, field: string, value: string) => {
+    const newProjects = [...resumeData.projects];
+    newProjects[index] = { ...newProjects[index], [field]: value };
+    setResumeData(prev => ({ ...prev, projects: newProjects }));
+  };
+
+  const addProject = () => {
+    setResumeData(prev => ({
+      ...prev,
+      projects: [...prev.projects, { name: "", description: "", technologies: "", link: "" }]
+    }));
+  };
+
+  const removeProject = (index: number) => {
+    setResumeData(prev => ({
+      ...prev,
+      projects: prev.projects.filter((_, i) => i !== index)
+    }));
+  };
+
   const handleSave = async () => {
     if (!user) {
       setShowAuthModal(true);
@@ -166,10 +329,16 @@ const Builder = () => {
       email: "",
       phone: "",
       location: "",
+      website: "",
+      linkedin: "",
+      github: "",
       summary: "",
       experience: [{ position: "", company: "", duration: "", description: "" }],
-      education: [{ degree: "", school: "", year: "" }],
+      education: [{ degree: "", school: "", year: "", grade: "" }],
       skills: [],
+      languages: [],
+      certifications: [],
+      projects: []
     });
     setResumeTitle("My Resume");
     setCurrentResumeId(null);
@@ -186,7 +355,6 @@ const Builder = () => {
       return;
     }
 
-    // Generate PDF download
     try {
       const success = await consumeDownload();
       if (success) {
@@ -204,18 +372,20 @@ const Builder = () => {
                   .contact { color: #666; }
                   .section { margin-bottom: 25px; }
                   .section-title { font-size: 18px; font-weight: bold; border-bottom: 2px solid #3b82f6; padding-bottom: 5px; margin-bottom: 15px; }
-                  .experience-item, .education-item { margin-bottom: 15px; }
+                  .item { margin-bottom: 15px; }
                   .position { font-weight: bold; }
                   .company { color: #3b82f6; font-weight: 500; }
                   .duration { color: #666; font-size: 14px; }
-                  .skills { display: flex; flex-wrap: wrap; gap: 10px; }
-                  .skill { background: #eff6ff; color: #1d4ed8; padding: 5px 10px; border-radius: 15px; font-size: 14px; }
+                  .tags { display: flex; flex-wrap: wrap; gap: 10px; }
+                  .tag { background: #eff6ff; color: #1d4ed8; padding: 5px 10px; border-radius: 15px; font-size: 14px; }
                 </style>
               </head>
               <body>
                 <div class="header">
                   <div class="name">${resumeData.fullName}</div>
                   <div class="contact">${resumeData.email} • ${resumeData.phone} • ${resumeData.location}</div>
+                  ${resumeData.website ? `<div class="contact">${resumeData.website}</div>` : ''}
+                  ${resumeData.linkedin || resumeData.github ? `<div class="contact">${resumeData.linkedin ? resumeData.linkedin : ''} ${resumeData.github ? '• ' + resumeData.github : ''}</div>` : ''}
                 </div>
                 
                 ${resumeData.summary ? `
@@ -229,7 +399,7 @@ const Builder = () => {
                 <div class="section">
                   <div class="section-title">Work Experience</div>
                   ${resumeData.experience.map(exp => `
-                    <div class="experience-item">
+                    <div class="item">
                       <div class="position">${exp.position}</div>
                       <div class="company">${exp.company}</div>
                       <div class="duration">${exp.duration}</div>
@@ -243,10 +413,10 @@ const Builder = () => {
                 <div class="section">
                   <div class="section-title">Education</div>
                   ${resumeData.education.map(edu => `
-                    <div class="education-item">
+                    <div class="item">
                       <div class="position">${edu.degree}</div>
                       <div class="company">${edu.school}</div>
-                      <div class="duration">${edu.year}</div>
+                      <div class="duration">${edu.year} ${edu.grade ? '• ' + edu.grade : ''}</div>
                     </div>
                   `).join('')}
                 </div>
@@ -255,9 +425,23 @@ const Builder = () => {
                 ${resumeData.skills.length > 0 ? `
                 <div class="section">
                   <div class="section-title">Skills</div>
-                  <div class="skills">
-                    ${resumeData.skills.map(skill => `<span class="skill">${skill}</span>`).join('')}
+                  <div class="tags">
+                    ${resumeData.skills.map(skill => `<span class="tag">${skill}</span>`).join('')}
                   </div>
+                </div>
+                ` : ''}
+                
+                ${resumeData.projects.length > 0 ? `
+                <div class="section">
+                  <div class="section-title">Projects</div>
+                  ${resumeData.projects.map(project => `
+                    <div class="item">
+                      <div class="position">${project.name}</div>
+                      <p>${project.description}</p>
+                      <div class="duration">Technologies: ${project.technologies}</div>
+                      ${project.link ? `<div class="duration">Link: ${project.link}</div>` : ''}
+                    </div>
+                  `).join('')}
                 </div>
                 ` : ''}
               </body>
@@ -289,7 +473,6 @@ const Builder = () => {
 
   const handlePricingModalClose = () => {
     setShowPricingModal(false);
-    // Refresh purchases when modal closes in case payment was completed
     setTimeout(() => {
       refreshPurchases();
     }, 500);
@@ -393,7 +576,10 @@ const Builder = () => {
             {/* Personal Information */}
             <Card>
               <CardHeader>
-                <CardTitle>Personal Information</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  Personal Information
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -434,6 +620,44 @@ const Builder = () => {
                       value={resumeData.location}
                       onChange={(e) => handleInputChange("location", e.target.value)}
                       placeholder="New York, NY"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="website">
+                      <Globe className="w-4 h-4 inline mr-1" />
+                      Website
+                    </Label>
+                    <Input
+                      id="website"
+                      value={resumeData.website}
+                      onChange={(e) => handleInputChange("website", e.target.value)}
+                      placeholder="www.johndoe.com"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="linkedin">
+                      <Linkedin className="w-4 h-4 inline mr-1" />
+                      LinkedIn
+                    </Label>
+                    <Input
+                      id="linkedin"
+                      value={resumeData.linkedin}
+                      onChange={(e) => handleInputChange("linkedin", e.target.value)}
+                      placeholder="linkedin.com/in/johndoe"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="github">
+                      <Github className="w-4 h-4 inline mr-1" />
+                      GitHub
+                    </Label>
+                    <Input
+                      id="github"
+                      value={resumeData.github}
+                      onChange={(e) => handleInputChange("github", e.target.value)}
+                      placeholder="github.com/johndoe"
                     />
                   </div>
                 </div>
@@ -546,11 +770,18 @@ const Builder = () => {
                         onChange={(e) => handleEducationChange(index, "school", e.target.value)}
                       />
                     </div>
-                    <Input
-                      placeholder="Year (e.g., 2020)"
-                      value={edu.year}
-                      onChange={(e) => handleEducationChange(index, "year", e.target.value)}
-                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input
+                        placeholder="Year (e.g., 2020)"
+                        value={edu.year}
+                        onChange={(e) => handleEducationChange(index, "year", e.target.value)}
+                      />
+                      <Input
+                        placeholder="Grade/GPA (optional)"
+                        value={edu.grade}
+                        onChange={(e) => handleEducationChange(index, "grade", e.target.value)}
+                      />
+                    </div>
                   </div>
                 ))}
               </CardContent>
@@ -589,6 +820,137 @@ const Builder = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Languages */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Languages</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Add a language (e.g., English - Native)"
+                    value={newLanguage}
+                    onChange={(e) => setNewLanguage(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && addLanguage()}
+                  />
+                  <Button onClick={addLanguage}>Add</Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {resumeData.languages.map((language, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-1 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm"
+                    >
+                      {language}
+                      <button
+                        onClick={() => removeLanguage(language)}
+                        className="ml-1 hover:text-green-600"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Certifications */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex justify-between items-center">
+                  Certifications
+                  <Button size="sm" onClick={addCertification}>
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {resumeData.certifications.map((cert, index) => (
+                  <div key={index} className="p-4 border rounded-lg space-y-3">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-medium">Certification {index + 1}</h4>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => removeCertification(index)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input
+                        placeholder="Certification Name"
+                        value={cert.name}
+                        onChange={(e) => handleCertificationChange(index, "name", e.target.value)}
+                      />
+                      <Input
+                        placeholder="Issuing Organization"
+                        value={cert.issuer}
+                        onChange={(e) => handleCertificationChange(index, "issuer", e.target.value)}
+                      />
+                    </div>
+                    <Input
+                      placeholder="Year"
+                      value={cert.year}
+                      onChange={(e) => handleCertificationChange(index, "year", e.target.value)}
+                    />
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* Projects */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex justify-between items-center">
+                  Projects
+                  <Button size="sm" onClick={addProject}>
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {resumeData.projects.map((project, index) => (
+                  <div key={index} className="p-4 border rounded-lg space-y-3">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-medium">Project {index + 1}</h4>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => removeProject(index)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <Input
+                      placeholder="Project Name"
+                      value={project.name}
+                      onChange={(e) => handleProjectChange(index, "name", e.target.value)}
+                    />
+                    <Textarea
+                      placeholder="Project Description"
+                      value={project.description}
+                      onChange={(e) => handleProjectChange(index, "description", e.target.value)}
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input
+                        placeholder="Technologies Used"
+                        value={project.technologies}
+                        onChange={(e) => handleProjectChange(index, "technologies", e.target.value)}
+                      />
+                      <Input
+                        placeholder="Project Link (optional)"
+                        value={project.link}
+                        onChange={(e) => handleProjectChange(index, "link", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
           </div>
 
           {/* Preview Section */}
@@ -598,7 +960,7 @@ const Builder = () => {
                 <CardTitle>Resume Preview</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="bg-white shadow-lg" style={{ transform: 'scale(0.6)', transformOrigin: 'top left', width: '166.67%', height: '166.67%' }}>
+                <div className="resume-preview bg-white shadow-lg select-none" style={{ transform: 'scale(0.6)', transformOrigin: 'top left', width: '166.67%', height: '166.67%', userSelect: 'none', pointerEvents: canDownload ? 'auto' : 'none' }}>
                   <ResumePreview data={resumeData} />
                 </div>
               </CardContent>

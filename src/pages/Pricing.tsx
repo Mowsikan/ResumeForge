@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Check, Download, Star, Zap } from "lucide-react";
+import { ArrowLeft, Check, Download, Star, Zap, Crown } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Pricing = () => {
@@ -17,15 +17,30 @@ const Pricing = () => {
         "Limited customization"
       ],
       cta: "Get Started",
-      popular: false
+      popular: false,
+      icon: Star
     },
     {
-      name: "Professional Pack",
-      price: "₹20",
-      originalPrice: "₹200",
-      description: "10 High-quality resume downloads",
+      name: "Single Download",
+      price: "₹1",
+      description: "One-time PDF download",
       features: [
         "Everything in Free",
+        "1 PDF download",
+        "Premium templates",
+        "ATS optimization",
+        "Valid for 7 days"
+      ],
+      cta: "Download - ₹1",
+      popular: false,
+      icon: Download
+    },
+    {
+      name: "Small Pack",
+      price: "₹5",
+      description: "10 High-quality resume downloads",
+      features: [
+        "Everything in Single",
         "10 PDF downloads",
         "All premium templates",
         "ATS optimization",
@@ -33,23 +48,26 @@ const Pricing = () => {
         "Priority support",
         "Valid for 30 days"
       ],
-      cta: "Buy Now - ₹20",
+      cta: "Buy Pack - ₹5",
       popular: true,
-      savings: "90% OFF"
+      savings: "Best Value",
+      icon: Zap
     },
     {
-      name: "Single Download",
-      price: "₹5",
-      description: "One-time PDF download",
+      name: "Unlimited Pack",
+      price: "₹100",
+      description: "Unlimited resume downloads",
       features: [
-        "Everything in Free",
-        "1 PDF download",
-        "Premium templates",
-        "ATS optimization",
-        "Valid for 24 hours"
+        "Everything in Small Pack",
+        "Unlimited PDF downloads",
+        "All premium templates",
+        "Custom colors & fonts",
+        "Premium support",
+        "Valid for 1 year"
       ],
-      cta: "Download - ₹5",
-      popular: false
+      cta: "Go Premium - ₹100",
+      popular: false,
+      icon: Crown
     }
   ];
 
@@ -69,6 +87,10 @@ const Pricing = () => {
     {
       question: "What payment methods do you accept?",
       answer: "We accept all major credit cards, debit cards, UPI, and net banking through Razorpay."
+    },
+    {
+      question: "How long are the downloads valid?",
+      answer: "Single download is valid for 7 days, Small pack for 30 days, and Unlimited pack for 1 year."
     }
   ];
 
@@ -119,36 +141,24 @@ const Pricing = () => {
 
       {/* Pricing Cards */}
       <section className="py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-3 gap-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-4 gap-6">
             {plans.map((plan, index) => (
               <Card key={index} className={`relative border-2 ${plan.popular ? 'border-blue-500 shadow-xl scale-105' : 'border-gray-200'}`}>
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                     <span className="bg-gradient-primary text-white px-4 py-1 rounded-full text-sm font-medium">
-                      Most Popular
-                    </span>
-                  </div>
-                )}
-                {plan.savings && (
-                  <div className="absolute -top-3 right-4">
-                    <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
                       {plan.savings}
                     </span>
                   </div>
                 )}
                 <CardHeader className="text-center">
                   <CardTitle className="flex items-center justify-center gap-2">
-                    {plan.name === "Free Preview" && <Star className="w-5 h-5 text-yellow-500" />}
-                    {plan.name === "Professional Pack" && <Zap className="w-5 h-5 text-blue-500" />}
-                    {plan.name === "Single Download" && <Download className="w-5 h-5 text-green-500" />}
+                    <plan.icon className="w-5 h-5 text-blue-500" />
                     {plan.name}
                   </CardTitle>
                   <div className="text-center">
                     <div className="text-4xl font-bold text-gray-900">{plan.price}</div>
-                    {plan.originalPrice && (
-                      <div className="text-lg text-gray-500 line-through">{plan.originalPrice}</div>
-                    )}
                   </div>
                   <p className="text-gray-600">{plan.description}</p>
                 </CardHeader>

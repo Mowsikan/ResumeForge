@@ -1,61 +1,71 @@
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Eye, Download } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft, Star, Crown, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Templates = () => {
   const templates = [
     {
-      id: 1,
+      id: "modern",
       name: "Modern Professional",
-      description: "Clean, minimalist design perfect for corporate roles",
-      category: "Professional",
-      preview: "/api/placeholder/300/400"
+      description: "Clean and contemporary design perfect for tech and business roles",
+      image: "/placeholder.svg",
+      features: ["ATS Optimized", "Clean Layout", "Professional"],
+      popular: true,
+      premium: false
     },
     {
-      id: 2,
+      id: "creative",
       name: "Creative Designer",
-      description: "Bold and creative layout for design professionals",
-      category: "Creative",
-      preview: "/api/placeholder/300/400"
+      description: "Eye-catching design for creative professionals and designers",
+      image: "/placeholder.svg",
+      features: ["Creative Layout", "Color Accents", "Portfolio Friendly"],
+      popular: false,
+      premium: true
     },
     {
-      id: 3,
-      name: "Executive Classic",
-      description: "Traditional format for senior executive positions",
-      category: "Executive",
-      preview: "/api/placeholder/300/400"
+      id: "executive",
+      name: "Executive",
+      description: "Sophisticated template for senior-level positions",
+      image: "/placeholder.svg",
+      features: ["Executive Style", "Professional", "Leadership Focus"],
+      popular: false,
+      premium: true
     },
     {
-      id: 4,
-      name: "Tech Specialist",
-      description: "Modern layout optimized for technical roles",
-      category: "Technology",
-      preview: "/api/placeholder/300/400"
+      id: "minimal",
+      name: "Minimal",
+      description: "Simple and clean design that focuses on content",
+      image: "/placeholder.svg",
+      features: ["Minimal Design", "Easy to Read", "ATS Friendly"],
+      popular: false,
+      premium: false
     },
     {
-      id: 5,
-      name: "Academic Scholar",
-      description: "Detailed format for academic and research positions",
-      category: "Academic",
-      preview: "/api/placeholder/300/400"
+      id: "academic",
+      name: "Academic",
+      description: "Perfect for academic positions and research roles",
+      image: "/placeholder.svg",
+      features: ["Research Focus", "Publication Ready", "Academic Style"],
+      popular: false,
+      premium: true
     },
     {
-      id: 6,
-      name: "Startup Founder",
-      description: "Dynamic layout for entrepreneurs and startup professionals",
-      category: "Startup",
-      preview: "/api/placeholder/300/400"
+      id: "startup",
+      name: "Startup",
+      description: "Dynamic template for startup and entrepreneurial roles",
+      image: "/placeholder.svg",
+      features: ["Dynamic Layout", "Innovation Focus", "Modern"],
+      popular: false,
+      premium: true
     }
   ];
 
-  const categories = ["All", "Professional", "Creative", "Executive", "Technology", "Academic", "Startup"];
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-40">
+      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
@@ -79,70 +89,135 @@ const Templates = () => {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+      {/* Hero Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-5xl font-bold text-gray-900 mb-6">
             Professional Resume Templates
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Choose from our collection of expertly designed, ATS-friendly templates
+          <p className="text-xl text-gray-600 mb-8">
+            Choose from our collection of ATS-optimized templates designed to help you land your dream job
           </p>
+          <div className="flex items-center justify-center gap-1 mb-4">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+            ))}
+            <span className="ml-2 text-gray-600">Used by 10,000+ job seekers</span>
+          </div>
         </div>
+      </section>
 
-        {/* Category Filter */}
-        <div className="flex flex-wrap justify-center gap-4 mb-8">
-          {categories.map((category) => (
-            <Button
-              key={category}
-              variant={category === "All" ? "default" : "outline"}
-              className={category === "All" ? "bg-gradient-primary" : ""}
-            >
-              {category}
-            </Button>
-          ))}
-        </div>
-
-        {/* Templates Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {templates.map((template) => (
-            <Card key={template.id} className="group hover:shadow-xl transition-shadow duration-300">
-              <CardContent className="p-0">
-                <div className="aspect-[3/4] bg-gradient-to-br from-blue-50 to-purple-50 rounded-t-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-white rounded-lg shadow-md flex items-center justify-center mb-4 mx-auto">
-                      <span className="text-2xl font-bold text-gradient">CV</span>
-                    </div>
-                    <p className="text-sm text-gray-600">Template {template.id}</p>
+      {/* Templates Grid */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {templates.map((template) => (
+              <Card key={template.id} className={`relative border-2 hover:shadow-lg transition-shadow ${template.popular ? 'border-blue-500' : 'border-gray-200'}`}>
+                {template.popular && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-gradient-primary text-white px-4 py-1 rounded-full text-sm font-medium">
+                      Most Popular
+                    </span>
                   </div>
-                </div>
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-1">{template.name}</h3>
-                      <p className="text-sm text-gray-600 mb-2">{template.description}</p>
-                      <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                        {template.category}
+                )}
+                {template.premium && (
+                  <div className="absolute top-4 right-4">
+                    <Crown className="w-5 h-5 text-yellow-500" />
+                  </div>
+                )}
+                <CardHeader>
+                  <div className="aspect-[3/4] bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
+                    <div className="text-gray-400 text-center">
+                      <div className="w-16 h-16 bg-gray-200 rounded-lg mx-auto mb-2"></div>
+                      <div className="text-sm">Template Preview</div>
+                    </div>
+                  </div>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>{template.name}</span>
+                    {template.premium && (
+                      <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+                        Premium
                       </span>
-                    </div>
+                    )}
+                  </CardTitle>
+                  <p className="text-gray-600 text-sm">{template.description}</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex flex-wrap gap-2">
+                    {template.features.map((feature, index) => (
+                      <span
+                        key={index}
+                        className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full"
+                      >
+                        {feature}
+                      </span>
+                    ))}
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Eye className="w-4 h-4 mr-2" />
-                      Preview
+                  <Link to="/builder" className="block">
+                    <Button 
+                      className={`w-full ${template.popular ? 'bg-gradient-primary' : ''}`}
+                      variant={template.popular ? 'default' : 'outline'}
+                    >
+                      Use Template
                     </Button>
-                    <Link to="/builder" className="flex-1">
-                      <Button size="sm" className="w-full bg-gradient-primary">
-                        Use Template
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Why Choose Our Templates?
+            </h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Zap className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">ATS Optimized</h3>
+              <p className="text-gray-600">All templates are designed to pass through Applicant Tracking Systems</p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Star className="w-6 h-6 text-green-600" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Professional Design</h3>
+              <p className="text-gray-600">Created by professional designers with years of experience</p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Crown className="w-6 h-6 text-purple-600" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Easy Customization</h3>
+              <p className="text-gray-600">Customize colors, fonts, and layouts to match your style</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-primary">
+        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-white mb-4">
+            Ready to Create Your Perfect Resume?
+          </h2>
+          <p className="text-xl text-blue-100 mb-8">
+            Start building your professional resume today with our easy-to-use builder
+          </p>
+          <Link to="/builder">
+            <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-50 text-lg px-8 py-3">
+              Start Building Now
+            </Button>
+          </Link>
+        </div>
+      </section>
     </div>
   );
 };

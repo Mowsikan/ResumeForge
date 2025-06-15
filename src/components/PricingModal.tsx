@@ -43,19 +43,28 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
   const planDetails = {
     single: {
       name: "Single Download",
-      price: 5,
+      price: 1,
       currency: "INR",
-      description: "1 PDF download with premium features"
+      description: "1 PDF download with premium features",
+      downloads: 1
     },
-    professional: {
-      name: "Professional Pack",
-      price: 20,
+    small: {
+      name: "Small Pack",
+      price: 5,
       currency: "INR", 
-      description: "10 PDF downloads with all premium features"
+      description: "10 PDF downloads with all premium features",
+      downloads: 10
+    },
+    unlimited: {
+      name: "Unlimited Pack",
+      price: 100,
+      currency: "INR",
+      description: "Unlimited PDF downloads with all premium features",
+      downloads: 999999
     }
   };
 
-  const handlePayment = async (plan: 'single' | 'professional') => {
+  const handlePayment = async (plan: 'single' | 'small' | 'unlimited') => {
     if (!user) {
       toast({
         title: "Authentication Required",
@@ -78,7 +87,8 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
       const { data: orderData, error: orderError } = await supabase.functions.invoke('create-order', {
         body: {
           plan_type: plan,
-          amount: selectedPlan.price
+          amount: selectedPlan.price,
+          downloads: selectedPlan.downloads
         }
       });
 
@@ -90,7 +100,6 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
         throw new Error('No order data received from server');
       }
 
-      // Close the pricing section before opening Razorpay
       onClose();
 
       const options = {
@@ -120,6 +129,9 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
               title: "Payment Successful!",
               description: `Your ${selectedPlan.name} has been activated. You can now download your resume.`,
             });
+
+            // Dispatch custom event for purchase refresh
+            window.dispatchEvent(new CustomEvent('paymentSuccess'));
           } catch (error) {
             toast({
               title: "Payment Verification Failed",
@@ -141,19 +153,10 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
         theme: {
           color: '#667eea'
         },
-        config: {
-          display: {
-            language: 'en'
-          }
-        },
         modal: {
           ondismiss: function() {
             setIsProcessing(false);
-          },
-          escape: true,
-          backdropclose: true,
-          confirm_close: true,
-          animation: true
+          }
         }
       };
 
@@ -195,21 +198,29 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
       "1 High-quality PDF download",
       "Premium templates",
       "ATS optimization",
-      "Valid for 24 hours"
+      "Valid for 7 days"
     ],
-    professional: [
+    small: [
       "Everything in Single",
       "10 PDF downloads",
       "All premium templates",
       "Custom colors & fonts",
       "Priority support",
       "Valid for 30 days"
+    ],
+    unlimited: [
+      "Everything in Small Pack",
+      "Unlimited PDF downloads",
+      "All premium templates",
+      "Custom colors & fonts",
+      "Premium support",
+      "Valid for 1 year"
     ]
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-40">
-      <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg max-w-7xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <div className="text-center flex-1">
@@ -226,7 +237,7 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
             </Button>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-4 gap-6">
             {/* Free Plan */}
             <Card className="border-2 border-gray-200">
               <CardHeader className="text-center">
@@ -263,7 +274,7 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
                   <Download className="w-5 h-5 text-green-500" />
                   Single Download
                 </CardTitle>
-                <div className="text-3xl font-bold text-gray-900">₹5</div>
+                <div className="text-3xl font-bold text-gray-900">₹1</div>
                 <p className="text-gray-600">One-time download</p>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -281,30 +292,29 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
                   disabled={isProcessing}
                 >
                   <CreditCard className="w-4 h-4 mr-2" />
-                  {isProcessing ? 'Processing...' : 'Buy for ₹5'}
+                  {isProcessing ? 'Processing...' : 'Buy for ₹1'}
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Professional Plan */}
+            {/* Small Pack Plan */}
             <Card className="border-2 border-blue-500 shadow-lg relative">
               <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                <span className="bg-gradient-primary text-white px-4 py-1 rounded-full text-sm font-medium">
+                <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
                   Best Value
                 </span>
               </div>
               <CardHeader className="text-center">
                 <CardTitle className="flex items-center justify-center gap-2">
                   <Zap className="w-5 h-5 text-blue-500" />
-                  Professional Pack
+                  Small Pack
                 </CardTitle>
-                <div className="text-3xl font-bold text-gray-900">₹20</div>
-                <div className="text-sm text-gray-500 line-through">₹50</div>
-                <p className="text-gray-600">10 downloads • 60% off</p>
+                <div className="text-3xl font-bold text-gray-900">₹5</div>
+                <p className="text-gray-600">10 downloads • Great value</p>
               </CardHeader>
               <CardContent className="space-y-4">
                 <ul className="space-y-2">
-                  {features.professional.map((feature, index) => (
+                  {features.small.map((feature, index) => (
                     <li key={index} className="flex items-center gap-3">
                       <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
                       <span className="text-sm text-gray-700">{feature}</span>
@@ -312,12 +322,47 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
                   ))}
                 </ul>
                 <Button 
-                  className="w-full bg-gradient-primary hover:opacity-90"
-                  onClick={() => handlePayment('professional')}
+                  className="w-full bg-blue-500 hover:bg-blue-600"
+                  onClick={() => handlePayment('small')}
                   disabled={isProcessing}
                 >
                   <CreditCard className="w-4 h-4 mr-2" />
-                  {isProcessing ? 'Processing...' : 'Buy Pack - ₹20'}
+                  {isProcessing ? 'Processing...' : 'Buy Pack - ₹5'}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Unlimited Plan */}
+            <Card className="border-2 border-purple-500 shadow-lg relative">
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <span className="bg-purple-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                  Premium
+                </span>
+              </div>
+              <CardHeader className="text-center">
+                <CardTitle className="flex items-center justify-center gap-2">
+                  <Star className="w-5 h-5 text-purple-500" />
+                  Unlimited Pack
+                </CardTitle>
+                <div className="text-3xl font-bold text-gray-900">₹100</div>
+                <p className="text-gray-600">Unlimited downloads</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <ul className="space-y-2">
+                  {features.unlimited.map((feature, index) => (
+                    <li key={index} className="flex items-center gap-3">
+                      <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      <span className="text-sm text-gray-700">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button 
+                  className="w-full bg-purple-500 hover:bg-purple-600"
+                  onClick={() => handlePayment('unlimited')}
+                  disabled={isProcessing}
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  {isProcessing ? 'Processing...' : 'Buy Unlimited - ₹100'}
                 </Button>
               </CardContent>
             </Card>
