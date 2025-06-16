@@ -15,6 +15,8 @@ serve(async (req) => {
   try {
     const { plan_type, amount } = await req.json()
     
+    console.log('Received plan_type:', plan_type, 'amount:', amount)
+    
     // Get the authorization header
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
@@ -76,10 +78,26 @@ serve(async (req) => {
     const razorpayOrder = await razorpayResponse.json()
     console.log('Razorpay order created:', razorpayOrder.id)
     
-    // Calculate expiry date
-    const expires_at = plan_type === 'professional' 
-      ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-      : new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+    // Calculate expiry date and downloads based on plan type
+    let expires_at: Date
+    let downloads_remaining: number
+
+    switch (plan_type) {
+      case 'single':
+        expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+        downloads_remaining = 1
+        break
+      case 'small':
+        expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+        downloads_remaining = 10
+        break
+      case 'unlimited':
+        expires_at = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year
+        downloads_remaining = 999999
+        break
+      default:
+        throw new Error(`Invalid plan type: ${plan_type}`)
+    }
 
     // Create purchase record
     const { data: purchase, error: purchaseError } = await supabaseClient
@@ -91,7 +109,7 @@ serve(async (req) => {
         currency: 'INR',
         razorpay_order_id: razorpayOrder.id,
         status: 'pending',
-        downloads_remaining: plan_type === 'professional' ? 10 : 1,
+        downloads_remaining,
         expires_at: expires_at.toISOString(),
       })
       .select()

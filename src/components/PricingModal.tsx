@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Download, Star, Zap, CreditCard, Shield, X } from "lucide-react";
+import { Check, Download, Star, Zap, CreditCard, Shield, X, Crown } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -198,7 +198,7 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
       "1 High-quality PDF download",
       "Premium templates",
       "ATS optimization",
-      "Valid for 7 days"
+      "Valid for 24 hours"
     ],
     small: [
       "Everything in Single",
@@ -341,7 +341,7 @@ export const PricingModal = ({ isOpen, onClose }: PricingModalProps) => {
               </div>
               <CardHeader className="text-center">
                 <CardTitle className="flex items-center justify-center gap-2">
-                  <Star className="w-5 h-5 text-purple-500" />
+                  <Crown className="w-5 h-5 text-purple-500" />
                   Unlimited Pack
                 </CardTitle>
                 <div className="text-3xl font-bold text-gray-900">₹100</div>

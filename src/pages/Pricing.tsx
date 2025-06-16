@@ -29,7 +29,7 @@ const Pricing = () => {
         "1 PDF download",
         "Premium templates",
         "ATS optimization",
-        "Valid for 7 days"
+        "Valid for 24 hours"
       ],
       cta: "Download - ₹1",
       popular: false,
@@ -90,37 +90,12 @@ const Pricing = () => {
     },
     {
       question: "How long are the downloads valid?",
-      answer: "Single download is valid for 7 days, Small pack for 30 days, and Unlimited pack for 1 year."
+      answer: "Single download is valid for 24 hours, Small pack for 30 days, and Unlimited pack for 1 year."
     }
   ];
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <Link to="/" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-                <ArrowLeft className="w-5 h-5" />
-                <span>Back</span>
-              </Link>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">R</span>
-                </div>
-                <span className="text-xl font-bold text-gray-900">ResumeForge</span>
-              </div>
-            </div>
-            <Link to="/builder">
-              <Button className="bg-gradient-primary hover:opacity-90">
-                Start Building
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-white pt-16">
       {/* Hero Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
