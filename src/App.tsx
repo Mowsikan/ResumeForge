@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Builder from "./pages/Builder";
 import Templates from "./pages/Templates";
 import Pricing from "./pages/Pricing";
+import SavedResumes from "./pages/SavedResumes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/builder" element={<Builder />} />
             <Route path="/templates" element={<Templates />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/saved-resumes" element={<SavedResumes />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

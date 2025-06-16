@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,12 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ResumePreview } from "@/components/ResumePreview";
 import { PricingModal } from "@/components/PricingModal";
+import { TemplateSelector } from "@/components/TemplateSelector";
 import { useAuth } from "@/hooks/useAuth";
 import { useResumes } from "@/hooks/useResumes";
 import { usePurchases } from "@/hooks/usePurchases";
 import { AuthModal } from "@/components/AuthModal";
 import { Download, Save, Plus, Trash2, User, MapPin, Globe, Github, Linkedin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useSearchParams } from "react-router-dom";
 
 export interface ResumeData {
   fullName: string;
@@ -118,11 +119,13 @@ const Builder = () => {
   const { resumes, saveResume, deleteResume, loading } = useResumes();
   const { canDownload, consumeDownload, refreshPurchases } = usePurchases();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [currentResumeId, setCurrentResumeId] = useState<string | null>(null);
   const [resumeTitle, setResumeTitle] = useState("My Resume");
   const [resumeData, setResumeData] = useState<ResumeData>(defaultResumeData);
+  const [currentTemplate, setCurrentTemplate] = useState("modern");
   const [newSkill, setNewSkill] = useState("");
   const [newLanguage, setNewLanguage] = useState("");
 
@@ -132,6 +135,26 @@ const Builder = () => {
       setShowAuthModal(true);
     }
   }, [user, loading]);
+
+  // Handle URL parameters for template and resume loading
+  useEffect(() => {
+    const templateParam = searchParams.get('template');
+    const resumeParam = searchParams.get('resume');
+
+    if (templateParam) {
+      setCurrentTemplate(templateParam);
+    }
+
+    if (resumeParam && resumes.length > 0) {
+      const resume = resumes.find(r => r.id === resumeParam);
+      if (resume) {
+        setResumeData(resume.resume_data);
+        setResumeTitle(resume.title);
+        setCurrentResumeId(resume.id);
+        setCurrentTemplate(resume.template_id || 'modern');
+      }
+    }
+  }, [searchParams, resumes]);
 
   // Listen for successful payments and refresh purchases
   useEffect(() => {
@@ -311,7 +334,7 @@ const Builder = () => {
       return;
     }
 
-    const result = await saveResume(resumeData, resumeTitle, currentResumeId);
+    const result = await saveResume(resumeData, resumeTitle, currentResumeId, currentTemplate);
     if (result && !currentResumeId) {
       setCurrentResumeId(result.id);
     }
@@ -321,6 +344,7 @@ const Builder = () => {
     setResumeData(resume.resume_data);
     setResumeTitle(resume.title);
     setCurrentResumeId(resume.id);
+    setCurrentTemplate(resume.template_id || 'modern');
   };
 
   const handleNewResume = () => {
@@ -342,6 +366,7 @@ const Builder = () => {
     });
     setResumeTitle("My Resume");
     setCurrentResumeId(null);
+    setCurrentTemplate("modern");
   };
 
   const handleDownload = async () => {
@@ -358,7 +383,7 @@ const Builder = () => {
     try {
       const success = await consumeDownload();
       if (success) {
-        // Create a simple PDF download using print functionality
+        // Create a simple PDF download using print functionality without watermark
         const printWindow = window.open('', '_blank');
         if (printWindow) {
           printWindow.document.write(`
@@ -959,8 +984,27 @@ const Builder = () => {
               <CardHeader>
                 <CardTitle>Resume Preview</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="resume-preview bg-white shadow-lg select-none" style={{ transform: 'scale(0.6)', transformOrigin: 'top left', width: '166.67%', height: '166.67%', userSelect: 'none', pointerEvents: canDownload ? 'auto' : 'none' }}>
+              <CardContent className="space-y-4">
+                <TemplateSelector 
+                  currentTemplate={currentTemplate}
+                  onTemplateChange={setCurrentTemplate}
+                />
+                <div className="resume-preview bg-white shadow-lg select-none relative" style={{ transform: 'scale(0.6)', transformOrigin: 'top left', width: '166.67%', height: '166.67%', userSelect: 'none', pointerEvents: canDownload ? 'auto' : 'none' }}>
+                  {/* Watermark overlay for non-premium users */}
+                  {!canDownload && (
+                    <div className="absolute inset-0 z-10 pointer-events-none">
+                      <div className="absolute inset-0 bg-black bg-opacity-5"></div>
+                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rotate-45 text-gray-300 text-6xl font-bold opacity-20 select-none">
+                        RESUMEFORGE
+                      </div>
+                      <div className="absolute top-1/4 left-1/4 transform -translate-x-1/2 -translate-y-1/2 rotate-45 text-gray-300 text-4xl font-bold opacity-15 select-none">
+                        SAMPLE
+                      </div>
+                      <div className="absolute bottom-1/4 right-1/4 transform translate-x-1/2 translate-y-1/2 rotate-45 text-gray-300 text-4xl font-bold opacity-15 select-none">
+                        PREVIEW
+                      </div>
+                    </div>
+                  )}
                   <ResumePreview data={resumeData} />
                 </div>
               </CardContent>

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Download, Eye, Zap, Star, Check } from "lucide-react";
 import { Link } from "react-router-dom";
+import { PricingSection } from "@/components/PricingSection";
 
 const Index = () => {
   const features = [
@@ -44,52 +45,47 @@ const Index = () => {
     }
   ];
 
-  const pricingPlans = [
+  const templates = [
     {
-      name: "Free Preview",
-      price: "$0",
-      description: "Build and preview your resume",
-      features: ["Live preview", "Basic template", "Online sharing"],
-      cta: "Get Started",
+      id: "modern",
+      name: "Modern Professional",
+      description: "Clean and contemporary design perfect for tech and business roles",
+      popular: true
+    },
+    {
+      id: "creative",
+      name: "Creative Designer",
+      description: "Eye-catching design for creative professionals",
       popular: false
     },
     {
-      name: "Professional",
-      price: "$9.99",
-      description: "Download high-quality PDF",
-      features: ["Everything in Free", "PDF download", "Premium templates", "ATS optimization"],
-      cta: "Download PDF",
-      popular: true
+      id: "executive",
+      name: "Executive",
+      description: "Sophisticated template for senior-level positions",
+      popular: false
+    },
+    {
+      id: "minimal",
+      name: "Minimal",
+      description: "Simple and clean design that focuses on content",
+      popular: false
+    },
+    {
+      id: "academic",
+      name: "Academic",
+      description: "Perfect for academic positions and research roles",
+      popular: false
+    },
+    {
+      id: "startup",
+      name: "Startup",
+      description: "Dynamic template for startup and entrepreneurial roles",
+      popular: false
     }
   ];
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">R</span>
-              </div>
-              <span className="text-xl font-bold text-gray-900">ResumeForge</span>
-            </div>
-            <nav className="hidden md:flex space-x-8">
-              <a href="#features" className="text-gray-600 hover:text-gray-900 transition-colors">Features</a>
-              <Link to="/templates" className="text-gray-600 hover:text-gray-900 transition-colors">Templates</Link>
-              <Link to="/pricing" className="text-gray-600 hover:text-gray-900 transition-colors">Pricing</Link>
-            </nav>
-            <Link to="/builder">
-              <Button className="bg-gradient-primary hover:opacity-90 transition-opacity">
-                Start Building
-                <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
-
       {/* Hero Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
@@ -109,9 +105,11 @@ const Index = () => {
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="text-lg px-8 py-3">
-                View Templates
-              </Button>
+              <Link to="/templates">
+                <Button size="lg" variant="outline" className="text-lg px-8 py-3">
+                  View Templates
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -156,20 +154,27 @@ const Index = () => {
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((template) => (
-              <Card key={template} className="group hover:shadow-xl transition-shadow duration-300 cursor-pointer">
+            {templates.slice(0, 6).map((template) => (
+              <Card key={template.id} className={`group hover:shadow-xl transition-shadow duration-300 cursor-pointer relative ${template.popular ? 'border-2 border-blue-500' : ''}`}>
+                {template.popular && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                    <span className="bg-gradient-primary text-white px-4 py-1 rounded-full text-sm font-medium">
+                      Most Popular
+                    </span>
+                  </div>
+                )}
                 <CardContent className="p-0">
                   <div className="aspect-[3/4] bg-gradient-to-br from-blue-50 to-purple-50 rounded-t-lg flex items-center justify-center">
                     <div className="text-center">
                       <div className="w-16 h-16 bg-white rounded-lg shadow-md flex items-center justify-center mb-4 mx-auto">
                         <span className="text-2xl font-bold text-gradient">CV</span>
                       </div>
-                      <p className="text-sm text-gray-600">Template {template}</p>
+                      <p className="text-sm text-gray-600">{template.name}</p>
                     </div>
                   </div>
                   <div className="p-4">
-                    <h3 className="font-semibold text-gray-900 mb-1">Modern Professional</h3>
-                    <p className="text-sm text-gray-600">Clean, minimalist design</p>
+                    <h3 className="font-semibold text-gray-900 mb-1">{template.name}</h3>
+                    <p className="text-sm text-gray-600">{template.description}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -222,56 +227,7 @@ const Index = () => {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Simple, Transparent Pricing
-            </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Start for free, upgrade when you're ready to download
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {pricingPlans.map((plan, index) => (
-              <Card key={index} className={`relative border-2 ${plan.popular ? 'border-blue-500 shadow-xl' : 'border-gray-200'}`}>
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-gradient-primary text-white px-4 py-1 rounded-full text-sm font-medium">
-                      Most Popular
-                    </span>
-                  </div>
-                )}
-                <CardContent className="p-8">
-                  <div className="text-center mb-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                    <div className="mb-2">
-                      <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
-                    </div>
-                    <p className="text-gray-600">{plan.description}</p>
-                  </div>
-                  <ul className="space-y-3 mb-8">
-                    {plan.features.map((feature, i) => (
-                      <li key={i} className="flex items-center gap-3">
-                        <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                        <span className="text-gray-600">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Link to="/builder" className="block">
-                    <Button 
-                      className={`w-full ${plan.popular ? 'bg-gradient-primary' : ''}`}
-                      variant={plan.popular ? 'default' : 'outline'}
-                    >
-                      {plan.cta}
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+      <PricingSection />
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-primary">

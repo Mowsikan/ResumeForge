@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Star, Crown, Zap } from "lucide-react";
+import { Star, Crown, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Templates = () => {
@@ -13,7 +13,8 @@ const Templates = () => {
       image: "/placeholder.svg",
       features: ["ATS Optimized", "Clean Layout", "Professional"],
       popular: true,
-      premium: false
+      premium: false,
+      color: "from-blue-50 to-indigo-100"
     },
     {
       id: "creative",
@@ -22,7 +23,8 @@ const Templates = () => {
       image: "/placeholder.svg",
       features: ["Creative Layout", "Color Accents", "Portfolio Friendly"],
       popular: false,
-      premium: true
+      premium: true,
+      color: "from-purple-50 to-pink-100"
     },
     {
       id: "executive",
@@ -31,7 +33,8 @@ const Templates = () => {
       image: "/placeholder.svg",
       features: ["Executive Style", "Professional", "Leadership Focus"],
       popular: false,
-      premium: true
+      premium: true,
+      color: "from-gray-50 to-slate-100"
     },
     {
       id: "minimal",
@@ -40,7 +43,8 @@ const Templates = () => {
       image: "/placeholder.svg",
       features: ["Minimal Design", "Easy to Read", "ATS Friendly"],
       popular: false,
-      premium: false
+      premium: false,
+      color: "from-green-50 to-emerald-100"
     },
     {
       id: "academic",
@@ -49,7 +53,8 @@ const Templates = () => {
       image: "/placeholder.svg",
       features: ["Research Focus", "Publication Ready", "Academic Style"],
       popular: false,
-      premium: true
+      premium: true,
+      color: "from-amber-50 to-yellow-100"
     },
     {
       id: "startup",
@@ -58,37 +63,43 @@ const Templates = () => {
       image: "/placeholder.svg",
       features: ["Dynamic Layout", "Innovation Focus", "Modern"],
       popular: false,
-      premium: true
+      premium: true,
+      color: "from-cyan-50 to-blue-100"
+    },
+    {
+      id: "technical",
+      name: "Technical",
+      description: "Optimized for software developers and engineers",
+      image: "/placeholder.svg",
+      features: ["Code Friendly", "Skills Focus", "Tech Optimized"],
+      popular: false,
+      premium: false,
+      color: "from-violet-50 to-purple-100"
+    },
+    {
+      id: "sales",
+      name: "Sales & Marketing",
+      description: "Perfect for sales professionals and marketers",
+      image: "/placeholder.svg",
+      features: ["Results Driven", "Achievement Focus", "Impact Oriented"],
+      popular: false,
+      premium: true,
+      color: "from-orange-50 to-red-100"
+    },
+    {
+      id: "consulting",
+      name: "Consulting",
+      description: "Professional template for consultants and analysts",
+      image: "/placeholder.svg",
+      features: ["Strategic Focus", "Problem Solving", "Professional"],
+      popular: false,
+      premium: true,
+      color: "from-teal-50 to-cyan-100"
     }
   ];
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <Link to="/" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-                <ArrowLeft className="w-5 h-5" />
-                <span>Back</span>
-              </Link>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">R</span>
-                </div>
-                <span className="text-xl font-bold text-gray-900">ResumeForge</span>
-              </div>
-            </div>
-            <Link to="/builder">
-              <Button className="bg-gradient-primary hover:opacity-90">
-                Start Building
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
-
       {/* Hero Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
@@ -126,10 +137,12 @@ const Templates = () => {
                   </div>
                 )}
                 <CardHeader>
-                  <div className="aspect-[3/4] bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
-                    <div className="text-gray-400 text-center">
-                      <div className="w-16 h-16 bg-gray-200 rounded-lg mx-auto mb-2"></div>
-                      <div className="text-sm">Template Preview</div>
+                  <div className={`aspect-[3/4] bg-gradient-to-br ${template.color} rounded-lg mb-4 flex items-center justify-center`}>
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-white rounded-lg shadow-md flex items-center justify-center mb-2 mx-auto">
+                        <span className="text-2xl font-bold text-gradient">CV</span>
+                      </div>
+                      <div className="text-sm text-gray-600">{template.name}</div>
                     </div>
                   </div>
                   <CardTitle className="flex items-center justify-between">
@@ -153,7 +166,7 @@ const Templates = () => {
                       </span>
                     ))}
                   </div>
-                  <Link to="/builder" className="block">
+                  <Link to={`/builder?template=${template.id}`} className="block">
                     <Button 
                       className={`w-full ${template.popular ? 'bg-gradient-primary' : ''}`}
                       variant={template.popular ? 'default' : 'outline'}
