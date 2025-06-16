@@ -12,8 +12,14 @@ import { useResumes } from "@/hooks/useResumes";
 import { PricingModal } from "@/components/PricingModal";
 import { TemplateSelector } from "@/components/TemplateSelector";
 import { ResumePreview } from "@/components/ResumePreview";
-import { Plus, Trash2, Download, Save, Star, Award } from "lucide-react";
+import { Plus, Trash2, Download, Save, Star, Award, Eye } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export interface ResumeData {
   fullName: string;
@@ -51,31 +57,70 @@ export interface ResumeData {
   }>;
 }
 
+// Dummy data for initial state
+const dummyResumeData: ResumeData = {
+  fullName: "John Doe",
+  email: "john.doe@example.com",
+  phone: "+1 (555) 123-4567",
+  location: "San Francisco, CA",
+  website: "www.johndoe.com",
+  linkedin: "linkedin.com/in/johndoe",
+  github: "github.com/johndoe",
+  summary: "Experienced Software Engineer with 5+ years of expertise in full-stack development, specializing in React, Node.js, and cloud technologies. Proven track record of delivering scalable solutions and leading cross-functional teams.",
+  experience: [
+    {
+      position: "Senior Software Engineer",
+      company: "Tech Innovations Inc.",
+      duration: "January 2021 - Present",
+      description: "Led development of microservices architecture serving 1M+ users. Implemented CI/CD pipelines reducing deployment time by 60%. Mentored 3 junior developers and collaborated with product teams to deliver features ahead of schedule."
+    },
+    {
+      position: "Software Engineer",
+      company: "StartupXYZ",
+      duration: "June 2019 - December 2020",
+      description: "Developed responsive web applications using React and Redux. Built RESTful APIs with Node.js and Express. Collaborated with UX designers to implement pixel-perfect interfaces."
+    }
+  ],
+  education: [
+    {
+      degree: "Bachelor of Science in Computer Science",
+      school: "University of California, Berkeley",
+      year: "2019",
+      grade: "3.8 GPA"
+    }
+  ],
+  skills: ["JavaScript", "React", "Node.js", "Python", "AWS", "Docker", "MongoDB", "PostgreSQL"],
+  languages: ["English (Native)", "Spanish (Conversational)"],
+  certifications: [
+    {
+      name: "AWS Certified Solutions Architect",
+      issuer: "Amazon Web Services",
+      year: "2022"
+    }
+  ],
+  projects: [
+    {
+      name: "E-commerce Platform",
+      description: "Built a full-stack e-commerce platform with React, Node.js, and MongoDB. Implemented payment processing, inventory management, and real-time notifications.",
+      technologies: "React, Node.js, MongoDB, Stripe API, Socket.io",
+      link: "https://github.com/johndoe/ecommerce-platform"
+    }
+  ]
+};
+
 const Builder = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { saveResume } = useResumes();
+  const { saveResume, resumes } = useResumes();
   const [searchParams] = useSearchParams();
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [currentTemplate, setCurrentTemplate] = useState("modern");
   const [resumeScore, setResumeScore] = useState(0);
+  const [selectedDownloadedResume, setSelectedDownloadedResume] = useState<any>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
-  const [resumeData, setResumeData] = useState<ResumeData>({
-    fullName: "",
-    email: "",
-    phone: "",
-    location: "",
-    website: "",
-    linkedin: "",
-    github: "",
-    summary: "",
-    experience: [{ position: "", company: "", duration: "", description: "" }],
-    education: [{ degree: "", school: "", year: "", grade: "" }],
-    skills: [],
-    languages: [],
-    certifications: [{ name: "", issuer: "", year: "" }],
-    projects: [{ name: "", description: "", technologies: "", link: "" }],
-  });
+  // Initialize with dummy data
+  const [resumeData, setResumeData] = useState<ResumeData>(dummyResumeData);
 
   const [currentSkill, setCurrentSkill] = useState("");
   const [currentLanguage, setCurrentLanguage] = useState("");
@@ -156,6 +201,11 @@ const Builder = () => {
 
   const handleDownload = () => {
     setShowPricingModal(true);
+  };
+
+  const handlePreviewDownloadedResume = (resume: any) => {
+    setSelectedDownloadedResume(resume);
+    setPreviewOpen(true);
   };
 
   const addExperience = () => {
@@ -327,6 +377,41 @@ const Builder = () => {
                 onTemplateChange={setCurrentTemplate}
               />
             </div>
+
+            {/* Downloaded Resumes Section */}
+            {user && resumes.length > 0 && (
+              <div className="mb-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Award className="w-5 h-5" />
+                      Your Downloaded Resumes
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-3">
+                      {resumes.slice(0, 4).map((resume) => (
+                        <div 
+                          key={resume.id}
+                          className="border rounded-lg p-3 cursor-pointer hover:shadow-md transition-shadow bg-white"
+                          onClick={() => handlePreviewDownloadedResume(resume)}
+                        >
+                          <div className="aspect-[3/4] bg-gradient-to-br from-blue-50 to-indigo-100 rounded mb-2 relative overflow-hidden">
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <Eye className="w-6 h-6 text-blue-600" />
+                            </div>
+                          </div>
+                          <h4 className="font-medium text-sm truncate">{resume.title}</h4>
+                          <p className="text-xs text-gray-500">
+                            {new Date(resume.updated_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
             <Tabs defaultValue="personal" className="space-y-6">
               <TabsList className="grid w-full grid-cols-6">
@@ -760,6 +845,22 @@ const Builder = () => {
             </div>
           </div>
         </div>
+
+        {/* Preview Modal for Downloaded Resumes */}
+        <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{selectedDownloadedResume?.title}</DialogTitle>
+            </DialogHeader>
+            {selectedDownloadedResume && (
+              <div className="flex justify-center">
+                <div className="bg-white shadow-lg">
+                  <ResumePreview data={selectedDownloadedResume.resume_data} />
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
 
       <PricingModal 
