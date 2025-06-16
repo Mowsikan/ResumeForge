@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Star, Crown, Zap } from "lucide-react";
+import { Star, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Templates = () => {
@@ -10,91 +10,97 @@ const Templates = () => {
       id: "modern",
       name: "Modern Professional",
       description: "Clean and contemporary design perfect for tech and business roles",
-      image: "/placeholder.svg",
       features: ["ATS Optimized", "Clean Layout", "Professional"],
       popular: true,
-      premium: false,
       color: "from-blue-50 to-indigo-100"
     },
     {
       id: "creative",
       name: "Creative Designer",
       description: "Eye-catching design for creative professionals and designers",
-      image: "/placeholder.svg",
       features: ["Creative Layout", "Color Accents", "Portfolio Friendly"],
       popular: false,
-      premium: true,
       color: "from-purple-50 to-pink-100"
     },
     {
       id: "executive",
       name: "Executive",
       description: "Sophisticated template for senior-level positions",
-      image: "/placeholder.svg",
       features: ["Executive Style", "Professional", "Leadership Focus"],
       popular: false,
-      premium: true,
       color: "from-gray-50 to-slate-100"
     },
     {
       id: "minimal",
       name: "Minimal",
       description: "Simple and clean design that focuses on content",
-      image: "/placeholder.svg",
       features: ["Minimal Design", "Easy to Read", "ATS Friendly"],
       popular: false,
-      premium: false,
       color: "from-green-50 to-emerald-100"
     },
     {
       id: "academic",
       name: "Academic",
       description: "Perfect for academic positions and research roles",
-      image: "/placeholder.svg",
       features: ["Research Focus", "Publication Ready", "Academic Style"],
       popular: false,
-      premium: true,
       color: "from-amber-50 to-yellow-100"
     },
     {
       id: "startup",
       name: "Startup",
       description: "Dynamic template for startup and entrepreneurial roles",
-      image: "/placeholder.svg",
       features: ["Dynamic Layout", "Innovation Focus", "Modern"],
       popular: false,
-      premium: true,
       color: "from-cyan-50 to-blue-100"
     },
     {
       id: "technical",
       name: "Technical",
       description: "Optimized for software developers and engineers",
-      image: "/placeholder.svg",
       features: ["Code Friendly", "Skills Focus", "Tech Optimized"],
       popular: false,
-      premium: false,
       color: "from-violet-50 to-purple-100"
     },
     {
       id: "sales",
       name: "Sales & Marketing",
       description: "Perfect for sales professionals and marketers",
-      image: "/placeholder.svg",
       features: ["Results Driven", "Achievement Focus", "Impact Oriented"],
       popular: false,
-      premium: true,
       color: "from-orange-50 to-red-100"
     },
     {
       id: "consulting",
       name: "Consulting",
       description: "Professional template for consultants and analysts",
-      image: "/placeholder.svg",
       features: ["Strategic Focus", "Problem Solving", "Professional"],
       popular: false,
-      premium: true,
       color: "from-teal-50 to-cyan-100"
+    },
+    {
+      id: "healthcare",
+      name: "Healthcare",
+      description: "Designed for medical and healthcare professionals",
+      features: ["Medical Focus", "Clean Design", "Professional"],
+      popular: false,
+      color: "from-red-50 to-rose-100"
+    },
+    {
+      id: "finance",
+      name: "Finance & Banking",
+      description: "Conservative design for financial sector professionals",
+      features: ["Conservative Style", "Numbers Focus", "Traditional"],
+      popular: false,
+      color: "from-emerald-50 to-green-100"
+    },
+    {
+      id: "education",
+      name: "Education",
+      description: "Perfect for teachers and educational professionals",
+      features: ["Educational Focus", "Clear Structure", "Professional"],
+      popular: false,
+      color: "from-blue-50 to-sky-100"
     }
   ];
 
@@ -131,11 +137,6 @@ const Templates = () => {
                     </span>
                   </div>
                 )}
-                {template.premium && (
-                  <div className="absolute top-4 right-4">
-                    <Crown className="w-5 h-5 text-yellow-500" />
-                  </div>
-                )}
                 <CardHeader>
                   <div className={`aspect-[3/4] bg-gradient-to-br ${template.color} rounded-lg mb-4 flex items-center justify-center`}>
                     <div className="text-center">
@@ -147,11 +148,6 @@ const Templates = () => {
                   </div>
                   <CardTitle className="flex items-center justify-between">
                     <span>{template.name}</span>
-                    {template.premium && (
-                      <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-                        Premium
-                      </span>
-                    )}
                   </CardTitle>
                   <p className="text-gray-600 text-sm">{template.description}</p>
                 </CardHeader>
@@ -206,7 +202,7 @@ const Templates = () => {
             </div>
             <div className="text-center">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Crown className="w-6 h-6 text-purple-600" />
+                <Zap className="w-6 h-6 text-purple-600" />
               </div>
               <h3 className="text-lg font-semibold mb-2">Easy Customization</h3>
               <p className="text-gray-600">Customize colors, fonts, and layouts to match your style</p>
