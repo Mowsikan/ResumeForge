@@ -69,8 +69,7 @@ export const useResumes = () => {
         .order('downloaded_at', { ascending: false });
 
       if (error) {
-        // If table doesn't exist, just set empty array
-        console.log('Downloaded resumes table not found, setting empty array');
+        console.error('Error fetching downloaded resumes:', error);
         setDownloadedResumes([]);
         return;
       }
@@ -159,10 +158,7 @@ export const useResumes = () => {
         .select()
         .single();
       
-      if (error) {
-        console.log('Downloaded resumes table might not exist, continuing without saving');
-        return null;
-      }
+      if (error) throw error;
 
       await fetchDownloadedResumes(); // Refresh the downloaded resumes list
       return data;
