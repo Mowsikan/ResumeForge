@@ -14,8 +14,17 @@ interface Resume {
   updated_at: string;
 }
 
+interface DownloadedResume {
+  id: string;
+  title: string;
+  resume_data: ResumeData;
+  template_id: string;
+  downloaded_at: string;
+}
+
 export const useResumes = () => {
   const [resumes, setResumes] = useState<Resume[]>([]);
+  const [downloadedResumes, setDownloadedResumes] = useState<DownloadedResume[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -47,6 +56,34 @@ export const useResumes = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDownloadedResumes = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('downloaded_resumes')
+        .select('*')
+        .order('downloaded_at', { ascending: false });
+
+      if (error) {
+        // If table doesn't exist, just set empty array
+        console.log('Downloaded resumes table not found, setting empty array');
+        setDownloadedResumes([]);
+        return;
+      }
+      
+      const typedDownloadedResumes = (data || []).map(resume => ({
+        ...resume,
+        resume_data: resume.resume_data as unknown as ResumeData
+      }));
+      
+      setDownloadedResumes(typedDownloadedResumes);
+    } catch (error) {
+      console.error('Error fetching downloaded resumes:', error);
+      setDownloadedResumes([]);
     }
   };
 
@@ -104,6 +141,37 @@ export const useResumes = () => {
     }
   };
 
+  const saveDownloadedResume = async (resumeData: ResumeData, title: string, templateId: string) => {
+    if (!user) return null;
+
+    try {
+      const payload = {
+        user_id: user.id,
+        title: title,
+        resume_data: resumeData as any,
+        template_id: templateId,
+        downloaded_at: new Date().toISOString(),
+      };
+
+      const { data, error } = await supabase
+        .from('downloaded_resumes')
+        .insert(payload)
+        .select()
+        .single();
+      
+      if (error) {
+        console.log('Downloaded resumes table might not exist, continuing without saving');
+        return null;
+      }
+
+      await fetchDownloadedResumes(); // Refresh the downloaded resumes list
+      return data;
+    } catch (error) {
+      console.error('Error saving downloaded resume:', error);
+      return null;
+    }
+  };
+
   const deleteResume = async (resumeId: string) => {
     if (!user) return;
 
@@ -133,13 +201,17 @@ export const useResumes = () => {
 
   useEffect(() => {
     fetchResumes();
+    fetchDownloadedResumes();
   }, [user]);
 
   return {
     resumes,
+    downloadedResumes,
     loading,
     saveResume,
+    saveDownloadedResume,
     deleteResume,
     refreshResumes: fetchResumes,
+    refreshDownloadedResumes: fetchDownloadedResumes,
   };
 };

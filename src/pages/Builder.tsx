@@ -141,7 +141,7 @@ const defaultResumeData: ResumeData = {
 
 const Builder = () => {
   const { user } = useAuth();
-  const { resumes, saveResume, deleteResume, loading } = useResumes();
+  const { resumes, downloadedResumes, saveResume, saveDownloadedResume, deleteResume, loading } = useResumes();
   const { canDownload, consumeDownload, refreshPurchases, purchases } = usePurchases();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
@@ -405,6 +405,9 @@ const Builder = () => {
     try {
       const success = await consumeDownload();
       if (success) {
+        // Save this resume to downloaded resumes
+        await saveDownloadedResume(resumeData, resumeTitle, currentTemplate);
+
         // Create a PDF download using print functionality without watermark
         const printWindow = window.open('', '_blank');
         if (printWindow) {
@@ -531,6 +534,11 @@ const Builder = () => {
   };
 
   const viewResume = (resume: any) => {
+    setSelectedResumeForView(resume);
+    setShowResumeModal(true);
+  };
+
+  const viewDownloadedResume = (resume: any) => {
     setSelectedResumeForView(resume);
     setShowResumeModal(true);
   };
@@ -1046,19 +1054,19 @@ const Builder = () => {
           </div>
         </div>
 
-        {/* Saved Resumes Section at Bottom */}
-        {resumes.length > 0 && (
+        {/* Downloaded Resumes Section at Bottom */}
+        {downloadedResumes.length > 0 && (
           <Card className="mt-8">
             <CardHeader>
               <CardTitle>Your Downloaded Resumes</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {resumes.map((resume) => (
+                {downloadedResumes.map((resume) => (
                   <div
                     key={resume.id}
                     className="group relative bg-white border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer"
-                    onClick={() => viewResume(resume)}
+                    onClick={() => viewDownloadedResume(resume)}
                   >
                     <div className="aspect-[3/4] bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center relative">
                       <div className="text-center">
@@ -1074,7 +1082,7 @@ const Builder = () => {
                     <div className="p-3">
                       <h3 className="font-medium text-sm truncate">{resume.title}</h3>
                       <p className="text-xs text-gray-500">
-                        {new Date(resume.updated_at).toLocaleDateString()}
+                        Downloaded on {new Date(resume.downloaded_at).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
