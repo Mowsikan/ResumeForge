@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useResumes } from "@/hooks/useResumes";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Eye, Edit, Trash2, Calendar } from "lucide-react";
+import { Eye, Edit, Trash2, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ResumePreview } from "@/components/ResumePreview";
 
@@ -95,79 +95,66 @@ const SavedResumes = () => {
             </Link>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {resumes.map((resume) => (
-              <Card 
-                key={resume.id} 
-                className="hover:shadow-lg transition-shadow bg-white border border-gray-200"
-              >
-                <CardContent className="p-0">
-                  {/* Resume Preview */}
-                  <div 
-                    className="relative bg-white border-b cursor-pointer group"
-                    onClick={() => handlePreviewResume(resume)}
-                    style={{ height: '400px' }}
-                  >
-                    <div className="absolute inset-0 overflow-hidden">
-                      <div className="transform scale-[0.25] origin-top-left w-[340%] h-[340%]">
-                        <div className="bg-white shadow-lg" style={{ width: '8.5in', minHeight: '11in' }}>
-                          <ResumePreview data={resume.resume_data} />
-                        </div>
-                      </div>
+              <Card key={resume.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <CardTitle className="flex justify-between items-start">
+                    <span className="truncate">{resume.title}</span>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handlePreviewResume(resume)}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteResume(resume.id)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
-                    
-                    {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <div className="bg-white rounded-full p-3 shadow-lg">
-                          <Eye className="w-6 h-6 text-blue-600" />
-                        </div>
-                      </div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {/* Resume Preview Thumbnail */}
+                  <div 
+                    className="aspect-[3/4] bg-white rounded-lg border shadow-sm mb-4 cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => handlePreviewResume(resume)}
+                  >
+                    <div className="p-4 scale-50 origin-top-left">
+                      <ResumePreview data={resume.resume_data} />
                     </div>
                   </div>
-
-                  {/* Resume Info */}
-                  <div className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-1 truncate">
-                          {resume.title}
-                        </h3>
-                        <div className="flex items-center text-sm text-gray-500 mb-2">
-                          <Calendar className="w-4 h-4 mr-1" />
-                          Updated: {new Date(resume.updated_at).toLocaleDateString()}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          Template: {resume.template_id || 'Modern Professional'}
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-1 ml-4">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handlePreviewResume(resume)}
-                          className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteResume(resume.id)}
-                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
+                  
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600">
+                      Updated: {new Date(resume.updated_at).toLocaleDateString()}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Template: {resume.template_id || 'Modern Professional'}
+                    </p>
                     
-                    <Link to={`/builder?resume=${resume.id}`} className="block">
-                      <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit Resume
+                    <div className="flex gap-2 pt-2">
+                      <Link to={`/builder?resume=${resume.id}`} className="flex-1">
+                        <Button variant="outline" size="sm" className="w-full">
+                          <Edit className="w-4 h-4 mr-1" />
+                          Edit
+                        </Button>
+                      </Link>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handlePreviewResume(resume)}
+                      >
+                        <Eye className="w-4 h-4" />
                       </Button>
-                    </Link>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

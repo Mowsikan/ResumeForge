@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Palette } from "lucide-react";
+import { Crown, Palette } from "lucide-react";
 
 interface TemplateSelectorProps {
   currentTemplate: string;
@@ -24,73 +24,64 @@ export const TemplateSelector = ({ currentTemplate, onTemplateChange }: Template
       id: "modern",
       name: "Modern Professional",
       description: "Clean and contemporary design",
+      premium: false,
       color: "from-blue-50 to-indigo-100"
     },
     {
       id: "creative",
       name: "Creative Designer",
       description: "Eye-catching design for creatives",
+      premium: true,
       color: "from-purple-50 to-pink-100"
     },
     {
       id: "executive",
       name: "Executive",
       description: "Sophisticated for senior roles",
+      premium: true,
       color: "from-gray-50 to-slate-100"
     },
     {
       id: "minimal",
       name: "Minimal",
       description: "Simple and clean design",
+      premium: false,
       color: "from-green-50 to-emerald-100"
     },
     {
       id: "academic",
       name: "Academic",
       description: "Perfect for academic positions",
+      premium: true,
       color: "from-amber-50 to-yellow-100"
     },
     {
       id: "startup",
       name: "Startup",
       description: "Dynamic for entrepreneurs",
+      premium: true,
       color: "from-cyan-50 to-blue-100"
     },
     {
       id: "technical",
       name: "Technical",
       description: "Optimized for developers",
+      premium: false,
       color: "from-violet-50 to-purple-100"
     },
     {
       id: "sales",
       name: "Sales & Marketing",
       description: "Perfect for sales professionals",
+      premium: true,
       color: "from-orange-50 to-red-100"
     },
     {
       id: "consulting",
       name: "Consulting",
       description: "Professional for consultants",
+      premium: true,
       color: "from-teal-50 to-cyan-100"
-    },
-    {
-      id: "healthcare",
-      name: "Healthcare",
-      description: "For medical professionals",
-      color: "from-red-50 to-rose-100"
-    },
-    {
-      id: "finance",
-      name: "Finance & Banking",
-      description: "Conservative financial design",
-      color: "from-emerald-50 to-green-100"
-    },
-    {
-      id: "education",
-      name: "Education",
-      description: "Perfect for educators",
-      color: "from-blue-50 to-sky-100"
     }
   ];
 
@@ -125,6 +116,11 @@ export const TemplateSelector = ({ currentTemplate, onTemplateChange }: Template
             >
               <CardContent className="p-4">
                 <div className={`aspect-[3/4] bg-gradient-to-br ${template.color} rounded-lg mb-3 flex items-center justify-center relative`}>
+                  {template.premium && (
+                    <div className="absolute top-2 right-2">
+                      <Crown className="w-4 h-4 text-yellow-500" />
+                    </div>
+                  )}
                   <div className="text-center">
                     <div className="w-12 h-12 bg-white rounded-lg shadow-md flex items-center justify-center mb-2 mx-auto">
                       <span className="text-lg font-bold text-gradient">CV</span>
@@ -133,7 +129,14 @@ export const TemplateSelector = ({ currentTemplate, onTemplateChange }: Template
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-medium text-sm">{template.name}</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium text-sm">{template.name}</h3>
+                    {template.premium && (
+                      <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+                        Premium
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-gray-600">{template.description}</p>
                 </div>
               </CardContent>
