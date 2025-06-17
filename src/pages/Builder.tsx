@@ -9,11 +9,18 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useResumes } from "@/hooks/useResumes";
+import { usePurchases } from "@/hooks/usePurchases";
 import { PricingModal } from "@/components/PricingModal";
 import { TemplateSelector } from "@/components/TemplateSelector";
 import { ResumePreview } from "@/components/ResumePreview";
-import { Plus, Trash2, Download, Save, Star, Award } from "lucide-react";
+import { Plus, Trash2, Download, Save, Star, Award, Eye } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export interface ResumeData {
   fullName: string;
@@ -54,15 +61,20 @@ export interface ResumeData {
 const Builder = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { saveResume } = useResumes();
+  const { saveResume, resumes } = useResumes();
+  const { canDownload, purchases, consumeDownload, loading: purchasesLoading } = usePurchases();
   const [searchParams] = useSearchParams();
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [currentTemplate, setCurrentTemplate] = useState("modern");
   const [resumeScore, setResumeScore] = useState(0);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [selectedResumeData, setSelectedResumeData] = useState<ResumeData | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
+  // Initialize with 20% dummy data
   const [resumeData, setResumeData] = useState<ResumeData>({
-    fullName: "",
-    email: "",
+    fullName: "John Doe",
+    email: "john.doe@example.com",
     phone: "",
     location: "",
     website: "",
@@ -154,8 +166,65 @@ const Builder = () => {
     }
   };
 
-  const handleDownload = () => {
-    setShowPricingModal(true);
+  const handleDownload = async () => {
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to download your resume",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!canDownload) {
+      setShowPricingModal(true);
+      return;
+    }
+
+    setIsDownloading(true);
+    try {
+      const success = await consumeDownload();
+      if (success) {
+        // Here you would implement the actual PDF generation and download
+        // For now, we'll simulate it
+        toast({
+          title: "Success",
+          description: "Resume downloaded successfully!",
+        });
+        
+        // Simulate PDF download
+        const element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,Resume PDF would be generated here');
+        element.setAttribute('download', `${resumeData.fullName || 'Resume'}.pdf`);
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+      } else {
+        toast({
+          title: "Download failed",
+          description: "Unable to process download. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to download resume",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handlePreviewResume = (resumeData: ResumeData) => {
+    setSelectedResumeData(resumeData);
+    setPreviewModalOpen(true);
+  };
+
+  const getTotalDownloads = () => {
+    return purchases.reduce((total, purchase) => total + purchase.downloads_remaining, 0);
   };
 
   const addExperience = () => {
@@ -293,6 +362,18 @@ const Builder = () => {
             <div className="mb-6">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Resume Builder</h1>
               <p className="text-gray-600">Create your professional resume</p>
+              
+              {/* Download Status */}
+              {user && !purchasesLoading && (
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center gap-2">
+                    <Download className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-800">
+                      You have {getTotalDownloads()} downloads remaining
+                    </span>
+                  </div>
+                </div>
+              )}
               
               {/* Resume Score */}
               <div className="mt-4 p-4 bg-white rounded-lg border">
@@ -565,13 +646,14 @@ const Builder = () => {
                         placeholder="Add a skill"
                         value={currentSkill}
                         onChange={(e) => setCurrentSkill(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && addSkill()}
                       />
                       <Button onClick={addSkill}>Add</Button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {resumeData.skills.map((skill, index) => (
                         <Badge key={index} variant="secondary" onClick={() => removeSkill(index)} className="cursor-pointer">
-                          {skill}
+                          {skill} ×
                         </Badge>
                       ))}
                     </div>
@@ -588,13 +670,14 @@ const Builder = () => {
                         placeholder="Add a language"
                         value={currentLanguage}
                         onChange={(e) => setCurrentLanguage(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && addLanguage()}
                       />
                       <Button onClick={addLanguage}>Add</Button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {resumeData.languages.map((language, index) => (
                         <Badge key={index} variant="secondary" onClick={() => removeLanguage(index)} className="cursor-pointer">
-                          {language}
+                          {language} ×
                         </Badge>
                       ))}
                     </div>
@@ -719,7 +802,6 @@ const Builder = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
-
             </Tabs>
 
             <div className="mt-6 flex gap-4">
@@ -727,40 +809,99 @@ const Builder = () => {
                 <Save className="w-4 h-4" />
                 Save Resume
               </Button>
-              <Button onClick={handleDownload} variant="outline" className="flex items-center gap-2">
+              <Button 
+                onClick={handleDownload} 
+                variant="outline" 
+                className="flex items-center gap-2"
+                disabled={isDownloading}
+              >
                 <Download className="w-4 h-4" />
-                Download PDF
+                {isDownloading ? "Downloading..." : "Download PDF"}
               </Button>
             </div>
+
+            {/* Your Downloaded Resumes Section - Moved to bottom */}
+            {user && resumes.length > 0 && (
+              <div className="mt-12 mb-8">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Eye className="w-5 h-5" />
+                      Your Saved Resumes
+                    </CardTitle>
+                    <p className="text-sm text-gray-600">View your saved resume drafts (editable)</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {resumes.map((resume) => (
+                        <div key={resume.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
+                          <div 
+                            onClick={() => handlePreviewResume(resume.resume_data)}
+                            className="space-y-2"
+                          >
+                            <h3 className="font-medium text-sm line-clamp-1">{resume.title}</h3>
+                            <p className="text-xs text-gray-500">
+                              Updated: {new Date(resume.updated_at).toLocaleDateString()}
+                            </p>
+                            <div className="aspect-[3/4] bg-gradient-to-br from-blue-50 to-indigo-100 rounded border-2 border-dashed border-blue-200 flex items-center justify-center">
+                              <div className="text-center">
+                                <Eye className="w-6 h-6 text-blue-500 mx-auto mb-1" />
+                                <span className="text-xs text-blue-600">Preview</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
 
           {/* Right Column - Preview */}
           <div className="lg:w-1/2">
             <div className="sticky top-8">
-              <h2 className="text-xl font-semibold mb-4">Resume Preview</h2>
-              <div className="border rounded-lg bg-white overflow-hidden">
-                <div className="relative">
-                  <ResumePreview data={resumeData} />
-                  {/* Watermark for non-premium users */}
-                  <div className="absolute inset-0 pointer-events-none">
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rotate-45 opacity-10">
-                      <span className="text-6xl font-bold text-gray-400">ResumeForge</span>
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <h2 className="text-xl font-semibold mb-4 text-center">Resume Preview</h2>
+                <div className="border rounded-lg bg-white overflow-hidden shadow-lg">
+                  <div className="relative">
+                    <ResumePreview data={resumeData} templateId={currentTemplate} />
+                    {/* Watermark for non-premium users */}
+                    <div className="absolute inset-0 pointer-events-none">
+                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rotate-45 opacity-10">
+                        <span className="text-6xl font-bold text-gray-400">ResumeForge</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              
-              {/* Change Template Button */}
-              <div className="mt-4">
-                <TemplateSelector 
-                  currentTemplate={currentTemplate}
-                  onTemplateChange={setCurrentTemplate}
-                />
+                
+                {/* Change Template Button */}
+                <div className="mt-4">
+                  <TemplateSelector 
+                    currentTemplate={currentTemplate}
+                    onTemplateChange={setCurrentTemplate}
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Preview Modal */}
+      <Dialog open={previewModalOpen} onOpenChange={setPreviewModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Resume Preview (Read-only)</DialogTitle>
+          </DialogHeader>
+          {selectedResumeData && (
+            <div className="border rounded-lg bg-white overflow-hidden">
+              <ResumePreview data={selectedResumeData} templateId="modern" />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <PricingModal 
         isOpen={showPricingModal} 
