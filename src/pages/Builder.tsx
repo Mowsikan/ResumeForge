@@ -12,9 +12,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { useResumes } from "@/hooks/useResumes";
 import { usePurchases } from "@/hooks/usePurchases";
 import { AuthModal } from "@/components/AuthModal";
-import { Download, Save, Plus, Trash2, User, MapPin, Globe, Github, Linkedin } from "lucide-react";
+import { Download, Save, Plus, Trash2, User, MapPin, Globe, Github, Linkedin, Palette, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export interface ResumeData {
   fullName: string;
@@ -52,82 +53,118 @@ export interface ResumeData {
   }>;
 }
 
-// Default resume data with examples
+// Resume score calculation function
+const calculateResumeScore = (data: ResumeData): { score: number; details: string[] } => {
+  let score = 0;
+  const details: string[] = [];
+
+  // Basic info (20 points)
+  if (data.fullName) { score += 5; details.push("✓ Full name provided"); }
+  if (data.email) { score += 5; details.push("✓ Email provided"); }
+  if (data.phone) { score += 5; details.push("✓ Phone number provided"); }
+  if (data.location) { score += 5; details.push("✓ Location provided"); }
+
+  // Professional summary (15 points)
+  if (data.summary && data.summary.length > 50) {
+    score += 15;
+    details.push("✓ Professional summary included");
+  } else if (data.summary) {
+    score += 8;
+    details.push("⚠ Professional summary too short");
+  }
+
+  // Work experience (25 points)
+  const validExperience = data.experience.filter(exp => exp.position && exp.company);
+  if (validExperience.length >= 2) {
+    score += 25;
+    details.push("✓ Multiple work experiences");
+  } else if (validExperience.length === 1) {
+    score += 15;
+    details.push("⚠ Only one work experience");
+  }
+
+  // Education (15 points)
+  const validEducation = data.education.filter(edu => edu.degree && edu.school);
+  if (validEducation.length > 0) {
+    score += 15;
+    details.push("✓ Education information provided");
+  }
+
+  // Skills (10 points)
+  if (data.skills.length >= 5) {
+    score += 10;
+    details.push("✓ Good number of skills listed");
+  } else if (data.skills.length > 0) {
+    score += 5;
+    details.push("⚠ Few skills listed");
+  }
+
+  // Additional sections (15 points)
+  if (data.certifications.length > 0) { score += 5; details.push("✓ Certifications included"); }
+  if (data.projects.length > 0) { score += 5; details.push("✓ Projects included"); }
+  if (data.languages.length > 0) { score += 5; details.push("✓ Languages included"); }
+
+  return { score: Math.min(score, 100), details };
+};
+
+// Default resume data with 20% completion
 const defaultResumeData: ResumeData = {
   fullName: "John Doe",
   email: "john.doe@email.com",
   phone: "+1 (555) 123-4567",
   location: "New York, NY",
-  website: "www.johndoe.com",
-  linkedin: "linkedin.com/in/johndoe",
-  github: "github.com/johndoe",
-  summary: "Experienced software developer with 5+ years of expertise in full-stack development. Passionate about creating scalable web applications and solving complex problems. Proven track record of delivering high-quality solutions in fast-paced environments.",
+  website: "",
+  linkedin: "",
+  github: "",
+  summary: "",
   experience: [
     {
-      position: "Senior Software Developer",
-      company: "Tech Solutions Inc.",
-      duration: "Jan 2022 - Present",
-      description: "Led development of microservices architecture serving 1M+ users. Implemented CI/CD pipelines reducing deployment time by 60%. Mentored junior developers and conducted code reviews."
-    },
-    {
-      position: "Software Developer",
-      company: "Digital Innovations",
-      duration: "Jun 2020 - Dec 2021",
-      description: "Developed responsive web applications using React and Node.js. Collaborated with cross-functional teams to deliver features on time. Optimized database queries improving performance by 40%."
+      position: "",
+      company: "",
+      duration: "",
+      description: ""
     }
   ],
   education: [
     {
-      degree: "Bachelor of Science in Computer Science",
-      school: "University of Technology",
-      year: "2020",
-      grade: "3.8 GPA"
+      degree: "",
+      school: "",
+      year: "",
+      grade: ""
     }
   ],
-  skills: ["JavaScript", "React", "Node.js", "Python", "PostgreSQL", "AWS", "Docker", "Git"],
-  languages: ["English (Native)", "Spanish (Conversational)", "French (Basic)"],
-  certifications: [
-    {
-      name: "AWS Certified Developer",
-      issuer: "Amazon Web Services",
-      year: "2023"
-    },
-    {
-      name: "React Professional Certificate",
-      issuer: "Meta",
-      year: "2022"
-    }
-  ],
-  projects: [
-    {
-      name: "E-commerce Platform",
-      description: "Built a full-stack e-commerce platform with React, Node.js, and PostgreSQL. Features include user authentication, payment processing, and admin dashboard.",
-      technologies: "React, Node.js, PostgreSQL, Stripe",
-      link: "github.com/johndoe/ecommerce"
-    },
-    {
-      name: "Task Management App",
-      description: "Developed a collaborative task management application with real-time updates using WebSocket connections.",
-      technologies: "Vue.js, Express.js, MongoDB, Socket.io",
-      link: "github.com/johndoe/taskmanager"
-    }
-  ]
+  skills: [],
+  languages: [],
+  certifications: [],
+  projects: []
 };
 
 const Builder = () => {
   const { user } = useAuth();
   const { resumes, saveResume, deleteResume, loading } = useResumes();
-  const { canDownload, consumeDownload, refreshPurchases } = usePurchases();
+  const { canDownload, consumeDownload, refreshPurchases, purchases } = usePurchases();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [showResumeModal, setShowResumeModal] = useState(false);
+  const [selectedResumeForView, setSelectedResumeForView] = useState<any>(null);
   const [currentResumeId, setCurrentResumeId] = useState<string | null>(null);
   const [resumeTitle, setResumeTitle] = useState("My Resume");
   const [resumeData, setResumeData] = useState<ResumeData>(defaultResumeData);
   const [currentTemplate, setCurrentTemplate] = useState("modern");
   const [newSkill, setNewSkill] = useState("");
   const [newLanguage, setNewLanguage] = useState("");
+
+  // Calculate resume score
+  const { score, details } = calculateResumeScore(resumeData);
+
+  // Calculate downloads remaining
+  const downloadsRemaining = purchases.reduce((total, purchase) => {
+    const isNotExpired = !purchase.expires_at || new Date(purchase.expires_at) > new Date();
+    return total + (isNotExpired ? purchase.downloads_remaining : 0);
+  }, 0);
 
   // Check if user is authenticated
   useEffect(() => {
@@ -334,7 +371,7 @@ const Builder = () => {
       return;
     }
 
-    const result = await saveResume(resumeData, resumeTitle, currentResumeId, currentTemplate);
+    const result = await saveResume(resumeData, resumeTitle, currentResumeId);
     if (result && !currentResumeId) {
       setCurrentResumeId(result.id);
     }
@@ -348,22 +385,7 @@ const Builder = () => {
   };
 
   const handleNewResume = () => {
-    setResumeData({
-      fullName: "",
-      email: "",
-      phone: "",
-      location: "",
-      website: "",
-      linkedin: "",
-      github: "",
-      summary: "",
-      experience: [{ position: "", company: "", duration: "", description: "" }],
-      education: [{ degree: "", school: "", year: "", grade: "" }],
-      skills: [],
-      languages: [],
-      certifications: [],
-      projects: []
-    });
+    setResumeData(defaultResumeData);
     setResumeTitle("My Resume");
     setCurrentResumeId(null);
     setCurrentTemplate("modern");
@@ -383,7 +405,7 @@ const Builder = () => {
     try {
       const success = await consumeDownload();
       if (success) {
-        // Create a simple PDF download using print functionality without watermark
+        // Create a PDF download using print functionality without watermark
         const printWindow = window.open('', '_blank');
         if (printWindow) {
           printWindow.document.write(`
@@ -473,7 +495,12 @@ const Builder = () => {
             </html>
           `);
           printWindow.document.close();
-          printWindow.print();
+          
+          // Trigger download
+          setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+          }, 100);
         }
         
         toast({
@@ -501,6 +528,11 @@ const Builder = () => {
     setTimeout(() => {
       refreshPurchases();
     }, 500);
+  };
+
+  const viewResume = (resume: any) => {
+    setSelectedResumeForView(resume);
+    setShowResumeModal(true);
   };
 
   if (!user) {
@@ -538,7 +570,13 @@ const Builder = () => {
               placeholder="Resume Title"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {/* Downloads remaining indicator */}
+            {downloadsRemaining > 0 && (
+              <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                {downloadsRemaining} downloads remaining
+              </div>
+            )}
             <Button variant="outline" onClick={handleNewResume}>
               <Plus className="w-4 h-4 mr-2" />
               New
@@ -557,47 +595,39 @@ const Builder = () => {
           </div>
         </div>
 
-        {/* Saved Resumes */}
-        {resumes.length > 0 && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Your Saved Resumes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {resumes.map((resume) => (
-                  <div
-                    key={resume.id}
-                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                      currentResumeId === resume.id ? 'border-blue-500 bg-blue-50' : 'hover:bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div onClick={() => handleLoadResume(resume)}>
-                        <h3 className="font-medium">{resume.title}</h3>
-                        <p className="text-sm text-gray-500">
-                          {new Date(resume.updated_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteResume(resume.id)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Form Section */}
           <div className="space-y-6">
+            {/* Resume Score */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  Resume Score
+                  <span className={`text-2xl font-bold ${score >= 80 ? 'text-green-600' : score >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                    {score}%
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className={`w-full bg-gray-200 rounded-full h-2 ${score >= 80 ? 'bg-green-200' : score >= 60 ? 'bg-yellow-200' : 'bg-red-200'}`}>
+                    <div 
+                      className={`h-2 rounded-full transition-all duration-300 ${score >= 80 ? 'bg-green-600' : score >= 60 ? 'bg-yellow-600' : 'bg-red-600'}`}
+                      style={{ width: `${score}%` }}
+                    ></div>
+                  </div>
+                  <details className="text-sm">
+                    <summary className="cursor-pointer text-gray-600 hover:text-gray-800">View score details</summary>
+                    <div className="mt-2 space-y-1">
+                      {details.map((detail, index) => (
+                        <div key={index} className="text-xs text-gray-600">{detail}</div>
+                      ))}
+                    </div>
+                  </details>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Personal Information */}
             <Card>
               <CardHeader>
@@ -982,37 +1012,80 @@ const Builder = () => {
           <div className="lg:sticky lg:top-8">
             <Card>
               <CardHeader>
-                <CardTitle>Resume Preview</CardTitle>
+                <CardTitle className="flex items-center justify-between">
+                  Resume Preview
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowTemplateModal(true)}
+                  >
+                    <Palette className="w-4 h-4 mr-2" />
+                    Change Template
+                  </Button>
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <TemplateSelector 
-                  currentTemplate={currentTemplate}
-                  onTemplateChange={setCurrentTemplate}
-                />
-                <div className="resume-preview bg-white shadow-lg select-none relative" style={{ transform: 'scale(0.6)', transformOrigin: 'top left', width: '166.67%', height: '166.67%', userSelect: 'none', pointerEvents: canDownload ? 'auto' : 'none' }}>
-                  {/* Watermark overlay for non-premium users */}
-                  {!canDownload && (
-                    <div className="absolute inset-0 z-10 pointer-events-none">
-                      <div className="absolute inset-0 bg-black bg-opacity-5"></div>
-                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rotate-45 text-gray-300 text-6xl font-bold opacity-20 select-none">
-                        RESUMEFORGE
-                      </div>
-                      <div className="absolute top-1/4 left-1/4 transform -translate-x-1/2 -translate-y-1/2 rotate-45 text-gray-300 text-4xl font-bold opacity-15 select-none">
-                        SAMPLE
-                      </div>
-                      <div className="absolute bottom-1/4 right-1/4 transform translate-x-1/2 translate-y-1/2 rotate-45 text-gray-300 text-4xl font-bold opacity-15 select-none">
-                        PREVIEW
-                      </div>
+                <div className="resume-preview bg-white shadow-lg select-none relative overflow-hidden" style={{ transform: 'scale(0.7)', transformOrigin: 'top left', width: '142.86%', height: '142.86%', userSelect: 'none' }}>
+                  {/* Watermark overlay */}
+                  <div className="absolute inset-0 z-10 pointer-events-none">
+                    <div className="absolute inset-0 bg-black bg-opacity-5"></div>
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rotate-45 text-gray-300 text-6xl font-bold opacity-20 select-none">
+                      RESUMEFORGE
                     </div>
-                  )}
-                  <ResumePreview data={resumeData} />
+                    <div className="absolute top-1/4 left-1/4 transform -translate-x-1/2 -translate-y-1/2 rotate-45 text-gray-300 text-4xl font-bold opacity-15 select-none">
+                      SAMPLE
+                    </div>
+                    <div className="absolute bottom-1/4 right-1/4 transform translate-x-1/2 translate-y-1/2 rotate-45 text-gray-300 text-4xl font-bold opacity-15 select-none">
+                      PREVIEW
+                    </div>
+                  </div>
+                  <ResumePreview data={resumeData} template={currentTemplate} />
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
+
+        {/* Saved Resumes Section at Bottom */}
+        {resumes.length > 0 && (
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle>Your Downloaded Resumes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {resumes.map((resume) => (
+                  <div
+                    key={resume.id}
+                    className="group relative bg-white border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer"
+                    onClick={() => viewResume(resume)}
+                  >
+                    <div className="aspect-[3/4] bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center relative">
+                      <div className="text-center">
+                        <div className="w-12 h-12 bg-white rounded-lg shadow-md flex items-center justify-center mb-2 mx-auto">
+                          <span className="text-lg font-bold text-blue-600">CV</span>
+                        </div>
+                        <div className="text-xs text-gray-600">{resume.title}</div>
+                      </div>
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                        <Eye className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-all duration-200" />
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <h3 className="font-medium text-sm truncate">{resume.title}</h3>
+                      <p className="text-xs text-gray-500">
+                        {new Date(resume.updated_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
+      {/* Modals */}
       <AuthModal 
         isOpen={showAuthModal} 
         onClose={() => setShowAuthModal(false)} 
@@ -1022,6 +1095,37 @@ const Builder = () => {
         isOpen={showPricingModal}
         onClose={handlePricingModalClose}
       />
+
+      <Dialog open={showTemplateModal} onOpenChange={setShowTemplateModal}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Choose a Template</DialogTitle>
+          </DialogHeader>
+          <TemplateSelector 
+            currentTemplate={currentTemplate}
+            onTemplateChange={(templateId) => {
+              setCurrentTemplate(templateId);
+              setShowTemplateModal(false);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showResumeModal} onOpenChange={setShowResumeModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedResumeForView?.title || 'Resume Preview'}</DialogTitle>
+          </DialogHeader>
+          {selectedResumeForView && (
+            <div className="bg-white shadow-lg" style={{ transform: 'scale(0.8)', transformOrigin: 'top center' }}>
+              <ResumePreview 
+                data={selectedResumeForView.resume_data} 
+                template={selectedResumeForView.template_id || 'modern'} 
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
