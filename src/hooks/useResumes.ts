@@ -90,16 +90,10 @@ export const useResumes = () => {
     if (!user) return null;
 
     try {
-      // Ensure achievements field exists
-      const dataToSave = {
-        ...resumeData,
-        achievements: resumeData.achievements || []
-      };
-
       const payload = {
         user_id: user.id,
         title: title || 'Untitled Resume',
-        resume_data: dataToSave as any, // Cast to any to satisfy Json type
+        resume_data: resumeData as any, // Cast to any to satisfy Json type
         template_id: templateId || 'modern',
         updated_at: new Date().toISOString(),
       };
@@ -154,16 +148,10 @@ export const useResumes = () => {
     if (!user) return null;
 
     try {
-      // Ensure achievements field exists
-      const dataToSave = {
-        ...resumeData,
-        achievements: resumeData.achievements || []
-      };
-
       const payload = {
         user_id: user.id,
         title: title,
-        resume_data: dataToSave as any,
+        resume_data: resumeData as any,
         template_id: templateId,
         downloaded_at: new Date().toISOString(),
       };
