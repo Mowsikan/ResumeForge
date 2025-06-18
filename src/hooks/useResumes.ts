@@ -86,7 +86,7 @@ export const useResumes = () => {
     }
   };
 
-  const saveResume = async (resumeData: ResumeData, title?: string, resumeId?: string) => {
+  const saveResume = async (resumeData: ResumeData, title?: string, resumeId?: string, templateId?: string) => {
     if (!user) return null;
 
     try {
@@ -94,9 +94,11 @@ export const useResumes = () => {
         user_id: user.id,
         title: title || 'Untitled Resume',
         resume_data: resumeData as any, // Cast to any to satisfy Json type
-        template_id: 'modern',
+        template_id: templateId || 'modern',
         updated_at: new Date().toISOString(),
       };
+
+      console.log('Saving resume with payload:', payload);
 
       let result;
       if (resumeId) {
@@ -110,6 +112,7 @@ export const useResumes = () => {
         
         if (error) throw error;
         result = data;
+        console.log('Resume updated successfully:', result);
       } else {
         // Create new resume
         const { data, error } = await supabase
@@ -120,6 +123,7 @@ export const useResumes = () => {
         
         if (error) throw error;
         result = data;
+        console.log('Resume created successfully:', result);
       }
 
       toast({
