@@ -1,5 +1,5 @@
 
-import { ResumeData } from "@/types/resume";
+import { ResumeData } from "@/pages/Builder";
 
 interface ResumePreviewProps {
   data: ResumeData;
@@ -340,43 +340,29 @@ export const ResumePreview = ({ data, template = "modern" }: ResumePreviewProps)
             <h2 className="text-lg font-bold mb-6 text-white border-b border-slate-500 pb-2">KEY ACHIEVEMENTS</h2>
             
             <div className="space-y-6">
-              {data.achievements && data.achievements.length > 0 ? (
-                data.achievements.map((achievement, index) => (
-                  <div key={index}>
-                    <div className="flex items-center mb-2">
-                      <span className="text-yellow-400 mr-2">★</span>
-                      <h3 className="font-bold text-sm">{achievement.title}</h3>
-                    </div>
-                    <p className="text-xs text-slate-300">{achievement.description}</p>
-                  </div>
-                ))
-              ) : (
-                <>
-                  <div>
-                    <div className="flex items-center mb-2">
-                      <span className="text-yellow-400 mr-2">★</span>
-                      <h3 className="font-bold text-sm">Excellence Award</h3>
-                    </div>
-                    <p className="text-xs text-slate-300">Recognized for outstanding leadership in organizational transformation.</p>
-                  </div>
+              <div>
+                <div className="flex items-center mb-2">
+                  <span className="text-yellow-400 mr-2">★</span>
+                  <h3 className="font-bold text-sm">Excellence Award</h3>
+                </div>
+                <p className="text-xs text-slate-300">Recognized for outstanding leadership in organizational transformation.</p>
+              </div>
 
-                  <div>
-                    <div className="flex items-center mb-2">
-                      <span className="text-yellow-400 mr-2">★</span>
-                      <h3 className="font-bold text-sm">Process Improvement</h3>
-                    </div>
-                    <p className="text-xs text-slate-300">Led initiatives resulting in significant efficiency improvements.</p>
-                  </div>
+              <div>
+                <div className="flex items-center mb-2">
+                  <span className="text-yellow-400 mr-2">★</span>
+                  <h3 className="font-bold text-sm">Process Improvement</h3>
+                </div>
+                <p className="text-xs text-slate-300">Led initiatives resulting in significant efficiency improvements.</p>
+              </div>
 
-                  <div>
-                    <div className="flex items-center mb-2">
-                      <span className="text-yellow-400 mr-2">★</span>
-                      <h3 className="font-bold text-sm">Team Leadership</h3>
-                    </div>
-                    <p className="text-xs text-slate-300">Successfully managed cross-functional teams and projects.</p>
-                  </div>
-                </>
-              )}
+              <div>
+                <div className="flex items-center mb-2">
+                  <span className="text-yellow-400 mr-2">★</span>
+                  <h3 className="font-bold text-sm">Team Leadership</h3>
+                </div>
+                <p className="text-xs text-slate-300">Successfully managed cross-functional teams and projects.</p>
+              </div>
             </div>
 
             {/* Skills */}
@@ -720,23 +706,6 @@ export const ResumePreview = ({ data, template = "modern" }: ResumePreviewProps)
                     )}
                   </div>
                 )
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Achievements */}
-        {data.achievements && data.achievements.length > 0 && (
-          <div>
-            <h2 className={styles.sectionTitleClass}>
-              Key Achievements
-            </h2>
-            <div className="space-y-3">
-              {data.achievements.map((achievement, index) => (
-                <div key={index}>
-                  <h3 className="font-semibold text-gray-900">{achievement.title}</h3>
-                  <p className="text-gray-700 text-sm">{achievement.description}</p>
-                </div>
               ))}
             </div>
           </div>

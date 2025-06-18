@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -85,20 +86,14 @@ export const useResumes = () => {
     }
   };
 
-  const saveResume = async (resumeData: any, title?: string, resumeId?: string, templateId?: string) => {
+  const saveResume = async (resumeData: ResumeData, title?: string, resumeId?: string, templateId?: string) => {
     if (!user) return null;
 
     try {
-      // Ensure achievements field exists
-      const updatedResumeData = {
-        ...resumeData,
-        achievements: resumeData.achievements || []
-      };
-
       const payload = {
         user_id: user.id,
         title: title || 'Untitled Resume',
-        resume_data: updatedResumeData as any,
+        resume_data: resumeData as any, // Cast to any to satisfy Json type
         template_id: templateId || 'modern',
         updated_at: new Date().toISOString(),
       };
@@ -149,20 +144,14 @@ export const useResumes = () => {
     }
   };
 
-  const saveDownloadedResume = async (resumeData: any, title: string, templateId: string) => {
+  const saveDownloadedResume = async (resumeData: ResumeData, title: string, templateId: string) => {
     if (!user) return null;
 
     try {
-      // Ensure achievements field exists
-      const updatedResumeData = {
-        ...resumeData,
-        achievements: resumeData.achievements || []
-      };
-
       const payload = {
         user_id: user.id,
         title: title,
-        resume_data: updatedResumeData as any,
+        resume_data: resumeData as any,
         template_id: templateId,
         downloaded_at: new Date().toISOString(),
       };
