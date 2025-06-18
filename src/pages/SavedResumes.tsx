@@ -119,7 +119,7 @@ const SavedResumes = () => {
                         {resume.resume_data.fullName || 'Untitled'}
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
-                        {resume.template_id || 'Modern'}
+                        {resume.template_id || 'Modern'} Template
                       </div>
                     </div>
                   </div>

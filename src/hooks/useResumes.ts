@@ -199,6 +199,16 @@ export const useResumes = () => {
     }
   };
 
+  const loadDownloadedResumeForEditing = (downloadedResume: DownloadedResume) => {
+    return {
+      resumeData: downloadedResume.resume_data,
+      title: downloadedResume.title,
+      templateId: downloadedResume.template_id,
+      isFromDownloaded: true,
+      downloadedResumeId: downloadedResume.id
+    };
+  };
+
   useEffect(() => {
     fetchResumes();
     fetchDownloadedResumes();
@@ -213,5 +223,6 @@ export const useResumes = () => {
     deleteResume,
     refreshResumes: fetchResumes,
     refreshDownloadedResumes: fetchDownloadedResumes,
+    loadDownloadedResumeForEditing,
   };
 };

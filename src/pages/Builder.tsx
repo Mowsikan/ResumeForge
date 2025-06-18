@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,9 +12,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useResumes } from "@/hooks/useResumes";
 import { usePurchases } from "@/hooks/usePurchases";
 import { AuthModal } from "@/components/AuthModal";
-import { Download, Save, Plus, Trash2, User, MapPin, Globe, Github, Linkedin, Palette, Eye } from "lucide-react";
+import { Download, Save, Plus, Trash2, User, MapPin, Globe, Github, Linkedin, Palette, Eye, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export interface ResumeData {
@@ -161,10 +160,11 @@ const defaultResumeData: ResumeData = {
 
 const Builder = () => {
   const { user } = useAuth();
-  const { resumes, downloadedResumes, saveResume, saveDownloadedResume, deleteResume, loading } = useResumes();
+  const { resumes, downloadedResumes, saveResume, saveDownloadedResume, deleteResume, loading, loadDownloadedResumeForEditing } = useResumes();
   const { canDownload, consumeDownload, refreshPurchases, purchases } = usePurchases();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
@@ -176,6 +176,7 @@ const Builder = () => {
   const [currentTemplate, setCurrentTemplate] = useState("modern");
   const [newSkill, setNewSkill] = useState("");
   const [newLanguage, setNewLanguage] = useState("");
+  const [isFromDownloaded, setIsFromDownloaded] = useState(false);
 
   // Calculate resume score
   const { score, details } = calculateResumeScore(resumeData);
@@ -197,6 +198,7 @@ const Builder = () => {
   useEffect(() => {
     const templateParam = searchParams.get('template');
     const resumeParam = searchParams.get('resume');
+    const downloadedParam = searchParams.get('downloaded');
 
     if (templateParam) {
       setCurrentTemplate(templateParam);
@@ -209,9 +211,22 @@ const Builder = () => {
         setResumeTitle(resume.title);
         setCurrentResumeId(resume.id);
         setCurrentTemplate(resume.template_id || 'modern');
+        setIsFromDownloaded(false);
       }
     }
-  }, [searchParams, resumes]);
+
+    if (downloadedParam && downloadedResumes.length > 0) {
+      const downloadedResume = downloadedResumes.find(r => r.id === downloadedParam);
+      if (downloadedResume) {
+        const loadedData = loadDownloadedResumeForEditing(downloadedResume);
+        setResumeData(loadedData.resumeData);
+        setResumeTitle(loadedData.title);
+        setCurrentTemplate(loadedData.templateId);
+        setCurrentResumeId(null); // Clear resume ID since this is from downloaded
+        setIsFromDownloaded(true);
+      }
+    }
+  }, [searchParams, resumes, downloadedResumes, loadDownloadedResumeForEditing]);
 
   // Listen for successful payments and refresh purchases
   useEffect(() => {
@@ -392,9 +407,10 @@ const Builder = () => {
     }
 
     console.log('Saving resume with template:', currentTemplate);
-    const result = await saveResume(resumeData, resumeTitle, currentResumeId);
+    const result = await saveResume(resumeData, resumeTitle, currentResumeId, currentTemplate);
     if (result && !currentResumeId) {
       setCurrentResumeId(result.id);
+      setIsFromDownloaded(false); // Mark as saved resume, not downloaded
     }
   };
 
@@ -404,6 +420,7 @@ const Builder = () => {
     setResumeTitle(resume.title);
     setCurrentResumeId(resume.id);
     setCurrentTemplate(resume.template_id || 'modern');
+    setIsFromDownloaded(false);
   };
 
   const handleNewResume = () => {
@@ -411,6 +428,7 @@ const Builder = () => {
     setResumeTitle("My Resume");
     setCurrentResumeId(null);
     setCurrentTemplate("modern");
+    setIsFromDownloaded(false);
   };
 
   const handleDownload = async () => {
@@ -427,7 +445,7 @@ const Builder = () => {
     try {
       const success = await consumeDownload();
       if (success) {
-        // Save this resume to downloaded resumes
+        // Save this resume to downloaded resumes with current template
         await saveDownloadedResume(resumeData, resumeTitle, currentTemplate);
 
         // Create a PDF download using print functionality without watermark and timestamp
@@ -565,6 +583,10 @@ const Builder = () => {
     setShowResumeModal(true);
   };
 
+  const editDownloadedResume = (resume: any) => {
+    navigate(`/builder?downloaded=${resume.id}`);
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -599,6 +621,11 @@ const Builder = () => {
               className="text-2xl font-bold border-none p-0 bg-transparent"
               placeholder="Resume Title"
             />
+            {isFromDownloaded && (
+              <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                Editing Downloaded Resume
+              </span>
+            )}
           </div>
           <div className="flex gap-2 items-center">
             {/* Downloads remaining indicator */}
@@ -1083,8 +1110,7 @@ const Builder = () => {
                 {downloadedResumes.map((resume) => (
                   <div
                     key={resume.id}
-                    className="group relative bg-white border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer"
-                    onClick={() => viewDownloadedResume(resume)}
+                    className="group relative bg-white border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200"
                   >
                     <div className="aspect-[3/4] bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center relative">
                       <div className="text-center">
@@ -1092,9 +1118,29 @@ const Builder = () => {
                           <span className="text-lg font-bold text-blue-600">CV</span>
                         </div>
                         <div className="text-xs text-gray-600">{resume.title}</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {resume.template_id || 'Modern'}
+                        </div>
                       </div>
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
-                        <Eye className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-all duration-200" />
+                        <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => viewDownloadedResume(resume)}
+                            className="bg-white bg-opacity-90 hover:bg-opacity-100"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => editDownloadedResume(resume)}
+                            className="bg-white bg-opacity-90 hover:bg-opacity-100"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                     <div className="p-3">
@@ -1102,6 +1148,25 @@ const Builder = () => {
                       <p className="text-xs text-gray-500">
                         Downloaded on {new Date(resume.downloaded_at).toLocaleDateString()}
                       </p>
+                      <div className="flex gap-2 mt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => viewDownloadedResume(resume)}
+                          className="flex-1"
+                        >
+                          <Eye className="w-3 h-3 mr-1" />
+                          View
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => editDownloadedResume(resume)}
+                          className="flex-1 bg-gradient-primary hover:opacity-90"
+                        >
+                          <Edit className="w-3 h-3 mr-1" />
+                          Edit
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
