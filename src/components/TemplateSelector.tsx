@@ -28,6 +28,27 @@ export const TemplateSelector = ({ currentTemplate, onTemplateChange }: Template
       color: "from-blue-50 to-indigo-100"
     },
     {
+      id: "professional",
+      name: "Professional Elite",
+      description: "Two-column layout with achievements sidebar",
+      premium: true,
+      color: "from-blue-50 to-slate-100"
+    },
+    {
+      id: "sidebar",
+      name: "Sidebar Professional",
+      description: "Dark sidebar with contact and skills",
+      premium: true,
+      color: "from-blue-900 to-slate-800"
+    },
+    {
+      id: "recruiter",
+      name: "Recruiter Focused",
+      description: "Clean layout optimized for HR professionals",
+      premium: true,
+      color: "from-blue-50 to-gray-100"
+    },
+    {
       id: "creative",
       name: "Creative Designer",
       description: "Eye-catching design for creatives",
@@ -49,39 +70,11 @@ export const TemplateSelector = ({ currentTemplate, onTemplateChange }: Template
       color: "from-green-50 to-emerald-100"
     },
     {
-      id: "academic",
-      name: "Academic",
-      description: "Perfect for academic positions",
-      premium: true,
-      color: "from-amber-50 to-yellow-100"
-    },
-    {
-      id: "startup",
-      name: "Startup",
-      description: "Dynamic for entrepreneurs",
-      premium: true,
-      color: "from-cyan-50 to-blue-100"
-    },
-    {
       id: "technical",
       name: "Technical",
       description: "Optimized for developers",
       premium: false,
       color: "from-violet-50 to-purple-100"
-    },
-    {
-      id: "sales",
-      name: "Sales & Marketing",
-      description: "Perfect for sales professionals",
-      premium: true,
-      color: "from-orange-50 to-red-100"
-    },
-    {
-      id: "consulting",
-      name: "Consulting",
-      description: "Professional for consultants",
-      premium: true,
-      color: "from-teal-50 to-cyan-100"
     }
   ];
 

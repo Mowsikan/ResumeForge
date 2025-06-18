@@ -17,6 +17,36 @@ const Templates = () => {
       color: "from-blue-50 to-indigo-100"
     },
     {
+      id: "professional",
+      name: "Professional Elite",
+      description: "Two-column layout with achievements sidebar, inspired by executive resumes",
+      image: "/placeholder.svg",
+      features: ["Two-Column Layout", "Achievement Sidebar", "Executive Style"],
+      popular: false,
+      premium: true,
+      color: "from-blue-50 to-slate-100"
+    },
+    {
+      id: "sidebar",
+      name: "Sidebar Professional",
+      description: "Dark sidebar design with contact info and skills highlighting",
+      image: "/placeholder.svg",
+      features: ["Dark Sidebar", "Contact Focused", "Skills Highlight"],
+      popular: false,
+      premium: true,
+      color: "from-blue-900 to-slate-800"
+    },
+    {
+      id: "recruiter",
+      name: "Recruiter Focused",
+      description: "Clean three-column layout optimized for HR professionals",
+      image: "/placeholder.svg",
+      features: ["HR Optimized", "Three-Column", "Clean Layout"],
+      popular: false,
+      premium: true,
+      color: "from-blue-50 to-gray-100"
+    },
+    {
       id: "creative",
       name: "Creative Designer",
       description: "Eye-catching design for creative professionals and designers",
@@ -47,26 +77,6 @@ const Templates = () => {
       color: "from-green-50 to-emerald-100"
     },
     {
-      id: "academic",
-      name: "Academic",
-      description: "Perfect for academic positions and research roles",
-      image: "/placeholder.svg",
-      features: ["Research Focus", "Publication Ready", "Academic Style"],
-      popular: false,
-      premium: true,
-      color: "from-amber-50 to-yellow-100"
-    },
-    {
-      id: "startup",
-      name: "Startup",
-      description: "Dynamic template for startup and entrepreneurial roles",
-      image: "/placeholder.svg",
-      features: ["Dynamic Layout", "Innovation Focus", "Modern"],
-      popular: false,
-      premium: true,
-      color: "from-cyan-50 to-blue-100"
-    },
-    {
       id: "technical",
       name: "Technical",
       description: "Optimized for software developers and engineers",
@@ -75,26 +85,6 @@ const Templates = () => {
       popular: false,
       premium: false,
       color: "from-violet-50 to-purple-100"
-    },
-    {
-      id: "sales",
-      name: "Sales & Marketing",
-      description: "Perfect for sales professionals and marketers",
-      image: "/placeholder.svg",
-      features: ["Results Driven", "Achievement Focus", "Impact Oriented"],
-      popular: false,
-      premium: true,
-      color: "from-orange-50 to-red-100"
-    },
-    {
-      id: "consulting",
-      name: "Consulting",
-      description: "Professional template for consultants and analysts",
-      image: "/placeholder.svg",
-      features: ["Strategic Focus", "Problem Solving", "Professional"],
-      popular: false,
-      premium: true,
-      color: "from-teal-50 to-cyan-100"
     }
   ];
 
