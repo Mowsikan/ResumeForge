@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -44,8 +43,8 @@ export const useResumes = () => {
       const typedResumes = (data || []).map(resume => ({
         ...resume,
         resume_data: {
-          ...resume.resume_data,
-          achievements: resume.resume_data.achievements || []
+          ...(resume.resume_data as ResumeData),
+          achievements: (resume.resume_data as ResumeData).achievements || []
         } as ResumeData
       }));
       
@@ -81,8 +80,8 @@ export const useResumes = () => {
       const typedDownloadedResumes = (data || []).map(resume => ({
         ...resume,
         resume_data: {
-          ...resume.resume_data,
-          achievements: resume.resume_data.achievements || []
+          ...(resume.resume_data as ResumeData),
+          achievements: (resume.resume_data as ResumeData).achievements || []
         } as ResumeData
       }));
       
