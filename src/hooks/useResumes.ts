@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { ResumeData } from '@/pages/Builder';
+import { ResumeData } from '@/types/resume';
 
 interface Resume {
   id: string;
@@ -40,10 +40,13 @@ export const useResumes = () => {
 
       if (error) throw error;
       
-      // Type cast the data to match our Resume interface using unknown as intermediate
+      // Ensure backwards compatibility with existing data
       const typedResumes = (data || []).map(resume => ({
         ...resume,
-        resume_data: resume.resume_data as unknown as ResumeData
+        resume_data: {
+          ...resume.resume_data,
+          achievements: resume.resume_data.achievements || []
+        } as ResumeData
       }));
       
       setResumes(typedResumes);
@@ -74,9 +77,13 @@ export const useResumes = () => {
         return;
       }
       
+      // Ensure backwards compatibility with existing data
       const typedDownloadedResumes = (data || []).map(resume => ({
         ...resume,
-        resume_data: resume.resume_data as unknown as ResumeData
+        resume_data: {
+          ...resume.resume_data,
+          achievements: resume.resume_data.achievements || []
+        } as ResumeData
       }));
       
       setDownloadedResumes(typedDownloadedResumes);

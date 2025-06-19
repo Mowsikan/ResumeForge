@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ResumePreview } from "@/components/ResumePreview";
 import { PricingModal } from "@/components/PricingModal";
 import { TemplateSelector } from "@/components/TemplateSelector";
+import { AchievementsInput } from "@/components/AchievementsInput";
 import { useAuth } from "@/hooks/useAuth";
 import { useResumes } from "@/hooks/useResumes";
 import { usePurchases } from "@/hooks/usePurchases";
@@ -16,42 +17,7 @@ import { Download, Save, Plus, Trash2, User, MapPin, Globe, Github, Linkedin, Pa
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-
-export interface ResumeData {
-  fullName: string;
-  email: string;
-  phone: string;
-  location: string;
-  website: string;
-  linkedin: string;
-  github: string;
-  summary: string;
-  experience: Array<{
-    position: string;
-    company: string;
-    duration: string;
-    description: string;
-  }>;
-  education: Array<{
-    degree: string;
-    school: string;
-    year: string;
-    grade: string;
-  }>;
-  skills: string[];
-  languages: string[];
-  certifications: Array<{
-    name: string;
-    issuer: string;
-    year: string;
-  }>;
-  projects: Array<{
-    name: string;
-    description: string;
-    technologies: string;
-    link: string;
-  }>;
-}
+import { ResumeData } from "@/types/resume";
 
 // Resume score calculation function
 const calculateResumeScore = (data: ResumeData): { score: number; details: string[] } => {
@@ -117,6 +83,11 @@ const defaultResumeData: ResumeData = {
   linkedin: "linkedin.com/in/johndoe",
   github: "github.com/johndoe",
   summary: "Experienced software developer with 5+ years of expertise in full-stack development. Passionate about creating innovative solutions and leading cross-functional teams to deliver high-quality software products.",
+  achievements: [
+    "Improved system performance by 40% through code optimization",
+    "Led a team of 5 developers on a critical project",
+    "Reduced application load time by 60%"
+  ],
   experience: [
     {
       position: "Senior Software Developer",
@@ -207,6 +178,7 @@ const Builder = () => {
     if (resumeParam && resumes.length > 0) {
       const resume = resumes.find(r => r.id === resumeParam);
       if (resume) {
+        console.log('Loading saved resume:', resume);
         setResumeData(resume.resume_data);
         setResumeTitle(resume.title);
         setCurrentResumeId(resume.id);
@@ -218,6 +190,7 @@ const Builder = () => {
     if (downloadedParam && downloadedResumes.length > 0) {
       const downloadedResume = downloadedResumes.find(r => r.id === downloadedParam);
       if (downloadedResume) {
+        console.log('Loading downloaded resume:', downloadedResume);
         const loadedData = loadDownloadedResumeForEditing(downloadedResume);
         setResumeData(loadedData.resumeData);
         setResumeTitle(loadedData.title);
@@ -282,7 +255,7 @@ const Builder = () => {
     };
   }, [toast]);
 
-  const handleInputChange = (field: keyof ResumeData, value: string) => {
+  const handleInputChange = (field: keyof ResumeData, value: string | string[]) => {
     setResumeData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -421,6 +394,9 @@ const Builder = () => {
     setCurrentResumeId(resume.id);
     setCurrentTemplate(resume.template_id || 'modern');
     setIsFromDownloaded(false);
+    
+    // Update URL to reflect the loaded resume
+    navigate(`/builder?resume=${resume.id}`);
   };
 
   const handleNewResume = () => {
@@ -429,6 +405,9 @@ const Builder = () => {
     setCurrentResumeId(null);
     setCurrentTemplate("modern");
     setIsFromDownloaded(false);
+    
+    // Clear URL parameters
+    navigate('/builder');
   };
 
   const handleDownload = async () => {
@@ -689,11 +668,12 @@ const Builder = () => {
             <Card>
               <CardContent className="p-6">
                 <Tabs defaultValue="personal" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4">
+                  <TabsList className="grid w-full grid-cols-5">
                     <TabsTrigger value="personal">Personal</TabsTrigger>
                     <TabsTrigger value="experience">Experience</TabsTrigger>
                     <TabsTrigger value="education">Education</TabsTrigger>
                     <TabsTrigger value="skills">Skills</TabsTrigger>
+                    <TabsTrigger value="achievements">Achievements</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="personal" className="space-y-4">
@@ -796,6 +776,13 @@ const Builder = () => {
                         />
                       </div>
                     </div>
+                  </TabsContent>
+
+                  <TabsContent value="achievements" className="space-y-4">
+                    <AchievementsInput
+                      achievements={resumeData.achievements}
+                      onChange={(achievements) => handleInputChange("achievements", achievements)}
+                    />
                   </TabsContent>
 
                   <TabsContent value="experience" className="space-y-4">
@@ -1098,6 +1085,82 @@ const Builder = () => {
             </Card>
           </div>
         </div>
+
+        {/* Saved Resumes Section */}
+        {resumes.length > 0 && (
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle>Your Saved Resumes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {resumes.map((resume) => (
+                  <div
+                    key={resume.id}
+                    className="group relative bg-white border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200"
+                  >
+                    <div className="aspect-[3/4] bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center relative">
+                      <div className="text-center">
+                        <div className="w-12 h-12 bg-white rounded-lg shadow-md flex items-center justify-center mb-2 mx-auto">
+                          <span className="text-lg font-bold text-blue-600">CV</span>
+                        </div>
+                        <div className="text-xs text-gray-600">{resume.title}</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {resume.template_id || 'Modern'}
+                        </div>
+                      </div>
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                        <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => viewResume(resume)}
+                            className="bg-white bg-opacity-90 hover:bg-opacity-100"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => handleLoadResume(resume)}
+                            className="bg-white bg-opacity-90 hover:bg-opacity-100"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <h3 className="font-medium text-sm truncate">{resume.title}</h3>
+                      <p className="text-xs text-gray-500">
+                        Updated on {new Date(resume.updated_at).toLocaleDateString()}
+                      </p>
+                      <div className="flex gap-2 mt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => viewResume(resume)}
+                          className="flex-1"
+                        >
+                          <Eye className="w-3 h-3 mr-1" />
+                          View
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleLoadResume(resume)}
+                          className="flex-1 bg-gradient-primary hover:opacity-90"
+                        >
+                          <Edit className="w-3 h-3 mr-1" />
+                          Edit
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Downloaded Resumes Section at Bottom */}
         {downloadedResumes.length > 0 && (
