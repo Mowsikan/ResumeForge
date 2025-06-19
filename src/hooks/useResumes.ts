@@ -43,8 +43,8 @@ export const useResumes = () => {
       const typedResumes = (data || []).map(resume => ({
         ...resume,
         resume_data: {
-          ...(resume.resume_data as ResumeData),
-          achievements: (resume.resume_data as ResumeData).achievements || []
+          ...(resume.resume_data as unknown as ResumeData),
+          achievements: ((resume.resume_data as unknown as ResumeData)?.achievements) || []
         } as ResumeData
       }));
       
@@ -80,8 +80,8 @@ export const useResumes = () => {
       const typedDownloadedResumes = (data || []).map(resume => ({
         ...resume,
         resume_data: {
-          ...(resume.resume_data as ResumeData),
-          achievements: (resume.resume_data as ResumeData).achievements || []
+          ...(resume.resume_data as unknown as ResumeData),
+          achievements: ((resume.resume_data as unknown as ResumeData)?.achievements) || []
         } as ResumeData
       }));
       
