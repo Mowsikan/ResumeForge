@@ -1,95 +1,180 @@
-
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
-import { AuthModal } from './AuthModal';
-import { useState } from 'react';
-import { User, LogOut, Save } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Menu } from "lucide-react";
 
-export const Navbar = () => {
+const Navbar = () => {
   const { user, signOut } = useAuth();
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const location = useLocation();
+  const { toast } = useToast();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast({
+      title: "Signed out",
+      description: "You have been successfully signed out.",
+    });
+  };
 
   return (
-    <nav className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+    <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">R</span>
+                <span className="text-white font-bold text-sm">CV</span>
               </div>
-              <span className="text-xl font-bold text-gray-900">ResumeForge</span>
+              <span className="font-semibold text-xl text-gray-900">ResumeBuilder</span>
             </Link>
           </div>
-          
-          <div className="flex items-center space-x-4">
-            {location.pathname === '/' && (
-              <a href="#features" className="text-gray-600 hover:text-gray-900">
-                Features
-              </a>
-            )}
-            <Link to="/templates" className="text-gray-600 hover:text-gray-900">
+
+          <div className="hidden md:flex items-center space-x-8">
+            <Link
+              to="/templates"
+              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+            >
               Templates
             </Link>
-            <Link to="/pricing" className="text-gray-600 hover:text-gray-900">
+            <Link
+              to="/pricing"
+              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+            >
               Pricing
             </Link>
-            
             {user && (
-              <Link to="/saved-resumes" className="text-gray-600 hover:text-gray-900 flex items-center gap-1">
-                <Save className="w-4 h-4" />
-                Saved Resumes
-              </Link>
-            )}
-            
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    {user.email}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => window.location.href = '/builder'}>
-                    Resume Builder
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={signOut} className="text-red-600">
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
               <>
-                <Button onClick={() => setShowAuthModal(true)}>
-                  Sign In
-                </Button>
-                <Link to="/builder">
-                  <Button className="bg-gradient-primary hover:opacity-90">
-                    Start Building
-                  </Button>
+                <Link
+                  to="/resumes"
+                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  My Resumes
+                </Link>
+                <Link
+                  to="/downloaded"
+                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Downloaded
                 </Link>
               </>
             )}
           </div>
+
+          <div className="flex items-center md:hidden">
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" className="p-2">
+                  <Menu className="h-6 w-6" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-full sm:w-64">
+                <SheetHeader className="text-left">
+                  <SheetTitle>Menu</SheetTitle>
+                  <SheetDescription>
+                    Navigate through the app.
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="flex flex-col space-y-4 py-4">
+                  <Link
+                    to="/templates"
+                    className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors block"
+                  >
+                    Templates
+                  </Link>
+                  <Link
+                    to="/pricing"
+                    className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors block"
+                  >
+                    Pricing
+                  </Link>
+                  {user && (
+                    <>
+                      <Link
+                        to="/resumes"
+                        className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors block"
+                      >
+                        My Resumes
+                      </Link>
+                      <Link
+                        to="/downloaded"
+                        className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors block"
+                      >
+                        Downloaded
+                      </Link>
+                    </>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+
+          <div className="flex items-center">
+            {user ? (
+              <Button variant="outline" onClick={handleSignOut}>
+                Sign Out
+              </Button>
+            ) : (
+              <Link to="/login">
+                <Button>Sign In / Sign Up</Button>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
-      
-      <AuthModal 
-        isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
-      />
+
+      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+        <SheetContent side="left" className="w-full sm:w-64">
+          <SheetHeader className="text-left">
+            <SheetTitle>Menu</SheetTitle>
+            <SheetDescription>
+              Navigate through the app.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="flex flex-col space-y-4 py-4">
+            <Link
+              to="/templates"
+              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors block"
+            >
+              Templates
+            </Link>
+            <Link
+              to="/pricing"
+              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors block"
+            >
+              Pricing
+            </Link>
+            {user && (
+              <>
+                <Link
+                  to="/resumes"
+                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors block"
+                >
+                  My Resumes
+                </Link>
+                <Link
+                  to="/downloaded"
+                  className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors block"
+                >
+                  Downloaded
+                </Link>
+              </>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </nav>
   );
 };
+
+export default Navbar;
