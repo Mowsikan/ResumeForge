@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -99,7 +100,7 @@ export const useResumes = () => {
       const payload = {
         user_id: user.id,
         title: title || 'Untitled Resume',
-        resume_data: resumeData as any, // Cast to any to satisfy Json type
+        resume_data: resumeData as any,
         template_id: templateId || 'modern',
         updated_at: new Date().toISOString(),
       };
@@ -137,7 +138,7 @@ export const useResumes = () => {
         description: resumeId ? "Resume updated successfully" : "Resume saved successfully",
       });
 
-      await fetchResumes(); // Refresh the list
+      await fetchResumes();
       return result;
     } catch (error) {
       console.error('Error saving resume:', error);
@@ -170,7 +171,7 @@ export const useResumes = () => {
       
       if (error) throw error;
 
-      await fetchDownloadedResumes(); // Refresh the downloaded resumes list
+      await fetchDownloadedResumes();
       return data;
     } catch (error) {
       console.error('Error saving downloaded resume:', error);
@@ -194,12 +195,39 @@ export const useResumes = () => {
         description: "Resume deleted successfully",
       });
 
-      await fetchResumes(); // Refresh the list
+      await fetchResumes();
     } catch (error) {
       console.error('Error deleting resume:', error);
       toast({
         title: "Error",
         description: "Failed to delete resume",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteDownloadedResume = async (resumeId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('downloaded_resumes')
+        .delete()
+        .eq('id', resumeId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Downloaded resume deleted successfully",
+      });
+
+      await fetchDownloadedResumes();
+    } catch (error) {
+      console.error('Error deleting downloaded resume:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete downloaded resume",
         variant: "destructive",
       });
     }
@@ -227,6 +255,7 @@ export const useResumes = () => {
     saveResume,
     saveDownloadedResume,
     deleteResume,
+    deleteDownloadedResume,
     refreshResumes: fetchResumes,
     refreshDownloadedResumes: fetchDownloadedResumes,
     loadDownloadedResumeForEditing,
