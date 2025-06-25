@@ -166,40 +166,53 @@ const Builder = () => {
   }, [user, loading]);
 
   // Handle URL parameters for template and resume loading
+  // Track if a resume/downloaded resume has been loaded to prevent overwriting user edits
+  const [hasLoadedResume, setHasLoadedResume] = useState(false);
+
   useEffect(() => {
     const templateParam = searchParams.get('template');
     const resumeParam = searchParams.get('resume');
     const downloadedParam = searchParams.get('downloaded');
 
+    // Only set template if explicitly changed via URL param
     if (templateParam) {
       setCurrentTemplate(templateParam);
     }
 
-    if (resumeParam && resumes.length > 0) {
-      const resume = resumes.find(r => r.id === resumeParam);
-      if (resume) {
-        console.log('Loading saved resume:', resume);
-        setResumeData(resume.resume_data);
-        setResumeTitle(resume.title);
-        setCurrentResumeId(resume.id);
-        setCurrentTemplate(resume.template_id || 'modern');
-        setIsFromDownloaded(false);
+    // Only load resume/downloaded resume once per param change
+    if (!hasLoadedResume) {
+      if (resumeParam && resumes.length > 0) {
+        const resume = resumes.find(r => r.id === resumeParam);
+        if (resume) {
+          console.log('Loading saved resume:', resume);
+          setResumeData(resume.resume_data);
+          setResumeTitle(resume.title);
+          setCurrentResumeId(resume.id);
+          setCurrentTemplate(resume.template_id || 'modern');
+          setIsFromDownloaded(false);
+          setHasLoadedResume(true);
+        }
+      } else if (downloadedParam && downloadedResumes.length > 0) {
+        const downloadedResume = downloadedResumes.find(r => r.id === downloadedParam);
+        if (downloadedResume) {
+          console.log('Loading downloaded resume:', downloadedResume);
+          const loadedData = loadDownloadedResumeForEditing(downloadedResume);
+          setResumeData(loadedData.resumeData);
+          setResumeTitle(loadedData.title);
+          setCurrentTemplate(loadedData.templateId);
+          setCurrentResumeId(null); // Clear resume ID since this is from downloaded
+          setIsFromDownloaded(true);
+          setHasLoadedResume(true);
+        }
       }
     }
+  }, [searchParams, resumes, downloadedResumes, loadDownloadedResumeForEditing, hasLoadedResume]);
 
-    if (downloadedParam && downloadedResumes.length > 0) {
-      const downloadedResume = downloadedResumes.find(r => r.id === downloadedParam);
-      if (downloadedResume) {
-        console.log('Loading downloaded resume:', downloadedResume);
-        const loadedData = loadDownloadedResumeForEditing(downloadedResume);
-        setResumeData(loadedData.resumeData);
-        setResumeTitle(loadedData.title);
-        setCurrentTemplate(loadedData.templateId);
-        setCurrentResumeId(null); // Clear resume ID since this is from downloaded
-        setIsFromDownloaded(true);
-      }
-    }
-  }, [searchParams, resumes, downloadedResumes, loadDownloadedResumeForEditing]);
+  // Reset hasLoadedResume when URL params change
+  useEffect(() => {
+    setHasLoadedResume(false);
+  }, [searchParams]);
+
 
   // Listen for successful payments and refresh purchases
   useEffect(() => {
@@ -380,10 +393,57 @@ const Builder = () => {
     }
 
     console.log('Saving resume with template:', currentTemplate);
-    const result = await saveResume(resumeData, resumeTitle, currentResumeId, currentTemplate);
-    if (result && !currentResumeId) {
-      setCurrentResumeId(result.id);
-      setIsFromDownloaded(false); // Mark as saved resume, not downloaded
+    
+    try {
+      let result;
+      
+      if (isFromDownloaded) {
+        // If it's a downloaded resume, save it as a new resume in the saved resumes section
+        result = await saveResume(resumeData, resumeTitle, undefined, currentTemplate);
+        if (result) {
+          setCurrentResumeId(result.id);
+          setIsFromDownloaded(false); // Now it's a saved resume
+          
+          // Remove the downloaded resume since we've converted it to a saved resume
+          if (currentResumeId) {
+            await deleteResume(currentResumeId);
+          }
+          
+          // Update URL to reflect the new saved resume
+          navigate(`/builder?resume=${result.id}`);
+          
+          toast({
+            title: "Success",
+            description: "Resume has been saved to your saved resumes",
+          });
+        }
+      } else {
+        // For regular saved resumes, just update them
+        result = await saveResume(resumeData, resumeTitle, currentResumeId, currentTemplate);
+        
+        if (result && !currentResumeId) {
+          // This is a new resume being saved for the first time
+          setCurrentResumeId(result.id);
+          navigate(`/builder?resume=${result.id}`);
+          
+          toast({
+            title: "Success",
+            description: "Resume saved successfully",
+          });
+        } else if (result) {
+          toast({
+            title: "Success",
+            description: "Resume updated successfully",
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error saving resume:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save resume. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -394,10 +454,24 @@ const Builder = () => {
     setCurrentResumeId(resume.id);
     setCurrentTemplate(resume.template_id || 'modern');
     setIsFromDownloaded(false);
-    
+    setHasLoadedResume(true); // Mark as loaded to prevent useEffect from overwriting
     // Update URL to reflect the loaded resume
     navigate(`/builder?resume=${resume.id}`);
   };
+
+  // Ensure template changes are always editable regardless of resume source
+  const handleTemplateChange = (templateId: string) => {
+    setCurrentTemplate(templateId);
+    // Optionally, persist template change to resume if loaded from saved/downloaded
+    if (currentResumeId && !isFromDownloaded) {
+      saveResume(resumeData, resumeTitle, currentResumeId, templateId);
+    }
+    if (isFromDownloaded) {
+      // Optionally, persist template change for downloaded resumes as well
+      // saveDownloadedResume(resumeData, resumeTitle, templateId);
+    }
+  };
+
 
   const handleNewResume = () => {
     setResumeData(defaultResumeData);
@@ -435,19 +509,43 @@ const Builder = () => {
               <head>
                 <title>${resumeData.fullName} - Resume</title>
                 <style>
-                  body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+                  @page {
+                    size: A4;
+                    margin: 0.5cm;
+                  }
+                  @media print {
+                    @page {
+                      margin: 0;
+                    }
+                    body {
+                      margin: 1.6cm;
+                    }
+                  }
+                  body { 
+                    font-family: Arial, sans-serif; 
+                    margin: 0; 
+                    padding: 20px;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                  }
                   .header { text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 20px; margin-bottom: 20px; }
                   .name { font-size: 28px; font-weight: bold; margin-bottom: 10px; }
                   .contact { color: #666; }
-                  .section { margin-bottom: 25px; }
+                  .section { margin-bottom: 25px; page-break-inside: avoid; }
                   .section-title { font-size: 18px; font-weight: bold; border-bottom: 2px solid #3b82f6; padding-bottom: 5px; margin-bottom: 15px; }
-                  .item { margin-bottom: 15px; }
+                  .item { margin-bottom: 15px; page-break-inside: avoid; }
                   .position { font-weight: bold; }
                   .company { color: #3b82f6; font-weight: 500; }
                   .duration { color: #666; font-size: 14px; }
                   .tags { display: flex; flex-wrap: wrap; gap: 10px; }
                   .tag { background: #eff6ff; color: #1d4ed8; padding: 5px 10px; border-radius: 15px; font-size: 14px; }
                 </style>
+                <script>
+                  // Prevent browser from adding headers/footers
+                  window.onbeforeprint = function() {
+                    return false;
+                  };
+                </script>
               </head>
               <body>
                 <div class="header">
@@ -1065,7 +1163,7 @@ const Builder = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="resume-preview bg-white shadow-lg select-none relative overflow-hidden" style={{ transform: 'scale(0.7)', transformOrigin: 'top left', width: '142.86%', height: '142.86%', userSelect: 'none' }}>
+                <div className="resume-preview bg-white shadow-lg select-none relative overflow-hidden" style={{ zoom: 0.8 as any, userSelect: 'none' }}>
                   {/* Watermark overlay */}
                   <div className="absolute inset-0 z-10 pointer-events-none">
                     <div className="absolute inset-0 bg-black bg-opacity-5"></div>
