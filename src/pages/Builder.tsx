@@ -704,24 +704,24 @@ const Builder = () => {
               </span>
             )}
           </div>
-          <div className="flex gap-2 items-center">
+          <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center w-full">
             {/* Downloads remaining indicator */}
             {downloadsRemaining > 0 && (
-              <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+              <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium hidden sm:block">
                 {downloadsRemaining} downloads remaining
               </div>
             )}
-            <Button variant="outline" onClick={handleNewResume}>
+            <Button variant="outline" onClick={handleNewResume} className="w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               New
             </Button>
-            <Button variant="outline" onClick={handleSave}>
+            <Button variant="outline" onClick={handleSave} className="w-full sm:w-auto">
               <Save className="w-4 h-4 mr-2" />
               Save
             </Button>
             <Button 
               onClick={handleDownload} 
-              className={canDownload ? "bg-gradient-primary hover:opacity-90" : "bg-gray-400"}
+              className={`w-full sm:w-auto ${canDownload ? "bg-gradient-primary hover:opacity-90" : "bg-gray-400"}`}
             >
               <Download className="w-4 h-4 mr-2" />
               {canDownload ? "Download PDF" : "Buy to Download"}
@@ -766,13 +766,40 @@ const Builder = () => {
             <Card>
               <CardContent className="p-6">
                 <Tabs defaultValue="personal" className="w-full">
-                  <TabsList className="grid w-full grid-cols-5">
-                    <TabsTrigger value="personal">Personal</TabsTrigger>
-                    <TabsTrigger value="experience">Experience</TabsTrigger>
-                    <TabsTrigger value="education">Education</TabsTrigger>
-                    <TabsTrigger value="skills">Skills</TabsTrigger>
-                    <TabsTrigger value="achievements">Achievements</TabsTrigger>
-                  </TabsList>
+                  <div className="relative w-full">
+                    <TabsList className="flex w-full overflow-x-auto no-scrollbar gap-2 sm:grid sm:grid-cols-5 sm:overflow-visible sm:static sm:px-0">
+                      <TabsTrigger 
+                        className="flex-none first:ml-44 sm:first:ml-0" 
+                        value="personal"
+                      >
+                        Personal
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        className="flex-none" 
+                        value="experience"
+                      >
+                        Experience
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        className="flex-none" 
+                        value="education"
+                      >
+                        Education
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        className="flex-none" 
+                        value="skills"
+                      >
+                        Skills
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        className="flex-none pr-4 sm:pr-0" 
+                        value="achievements"
+                      >
+                        Achievements
+                      </TabsTrigger>
+                    </TabsList>
+                  </div>
 
                   <TabsContent value="personal" className="space-y-4">
                     <div className="space-y-4">
@@ -781,7 +808,7 @@ const Builder = () => {
                         Personal Information
                       </h3>
                       
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="fullName">Full Name</Label>
                           <Input
@@ -803,7 +830,7 @@ const Builder = () => {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="phone">Phone</Label>
                           <Input
@@ -824,7 +851,7 @@ const Builder = () => {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div>
                           <Label htmlFor="website">
                             <Globe className="w-4 h-4 inline mr-1" />
@@ -907,7 +934,7 @@ const Builder = () => {
                               </Button>
                             )}
                           </div>
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <Input
                               placeholder="Position"
                               value={exp.position}
@@ -958,7 +985,7 @@ const Builder = () => {
                               </Button>
                             )}
                           </div>
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <Input
                               placeholder="Degree"
                               value={edu.degree}
@@ -970,7 +997,7 @@ const Builder = () => {
                               onChange={(e) => handleEducationChange(index, "school", e.target.value)}
                             />
                           </div>
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <Input
                               placeholder="Year (e.g., 2020)"
                               value={edu.year}
@@ -1070,7 +1097,7 @@ const Builder = () => {
                                 <Trash2 className="w-4 h-4" />
                               </Button>
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                               <Input
                                 placeholder="Certification Name"
                                 value={cert.name}
@@ -1124,7 +1151,7 @@ const Builder = () => {
                               value={project.description}
                               onChange={(e) => handleProjectChange(index, "description", e.target.value)}
                             />
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                               <Input
                                 placeholder="Technologies Used"
                                 value={project.technologies}
