@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Star, Crown, Zap } from "lucide-react";
@@ -91,62 +90,62 @@ const Templates = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      <section className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">
             Professional Resume Templates
           </h1>
-          <p className="text-xl text-gray-600 mb-8">
+          <p className="text-lg sm:text-xl text-gray-600 mb-6 sm:mb-8 px-4">
             Choose from our collection of ATS-optimized templates designed to help you land your dream job
           </p>
           <div className="flex items-center justify-center gap-1 mb-4">
             {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+              <Star key={i} className="w-4 h-4 sm:w-5 sm:h-5 fill-yellow-400 text-yellow-400" />
             ))}
-            <span className="ml-2 text-gray-600">Used by 10,000+ job seekers</span>
+            <span className="ml-2 text-sm sm:text-base text-gray-600">Used by 10,000+ job seekers</span>
           </div>
         </div>
       </section>
 
       {/* Templates Grid */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8">
+      <section className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {templates.map((template) => (
               <Card key={template.id} className={`relative border-2 hover:shadow-lg transition-shadow ${template.popular ? 'border-blue-500' : 'border-gray-200'}`}>
                 {template.popular && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-gradient-primary text-white px-4 py-1 rounded-full text-sm font-medium">
+                  <div className="absolute -top-2 sm:-top-3 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-gradient-primary text-white px-3 sm:px-4 py-1 rounded-full text-xs sm:text-sm font-medium">
                       Most Popular
                     </span>
                   </div>
                 )}
                 {template.premium && (
-                  <div className="absolute top-4 right-4">
-                    <Crown className="w-5 h-5 text-yellow-500" />
+                  <div className="absolute top-3 sm:top-4 right-3 sm:right-4">
+                    <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
                   </div>
                 )}
-                <CardHeader>
-                  <div className={`aspect-[3/4] bg-gradient-to-br ${template.color} rounded-lg mb-4 flex items-center justify-center`}>
+                <CardHeader className="p-3 sm:p-6">
+                  <div className={`aspect-[3/4] bg-gradient-to-br ${template.color} rounded-lg mb-3 sm:mb-4 flex items-center justify-center`}>
                     <div className="text-center">
-                      <div className="w-16 h-16 bg-white rounded-lg shadow-md flex items-center justify-center mb-2 mx-auto">
-                        <span className="text-2xl font-bold text-gradient">CV</span>
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-lg shadow-md flex items-center justify-center mb-2 mx-auto">
+                        <span className="text-lg sm:text-2xl font-bold text-gradient">CV</span>
                       </div>
-                      <div className="text-sm text-gray-600">{template.name}</div>
+                      <div className="text-xs sm:text-sm text-gray-600">{template.name}</div>
                     </div>
                   </div>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>{template.name}</span>
+                  <CardTitle className="flex items-center justify-between text-sm sm:text-base">
+                    <span className="truncate">{template.name}</span>
                     {template.premium && (
-                      <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+                      <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full ml-2 flex-shrink-0">
                         Premium
                       </span>
                     )}
                   </CardTitle>
-                  <p className="text-gray-600 text-sm">{template.description}</p>
+                  <p className="text-gray-600 text-xs sm:text-sm line-clamp-2">{template.description}</p>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex flex-wrap gap-2">
+                <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-6 pt-0">
+                  <div className="flex flex-wrap gap-1 sm:gap-2">
                     {template.features.map((feature, index) => (
                       <span
                         key={index}
@@ -158,8 +157,9 @@ const Templates = () => {
                   </div>
                   <Link to={`/builder?template=${template.id}`} className="block">
                     <Button 
-                      className={`w-full ${template.popular ? 'bg-gradient-primary' : ''}`}
+                      className={`w-full text-xs sm:text-sm ${template.popular ? 'bg-gradient-primary' : ''}`}
                       variant={template.popular ? 'default' : 'outline'}
+                      size="sm"
                     >
                       Use Template
                     </Button>
@@ -172,50 +172,50 @@ const Templates = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-12 sm:py-16 lg:py-20 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">
               Why Choose Our Templates?
             </h2>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
             <div className="text-center">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Zap className="w-6 h-6 text-blue-600" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">ATS Optimized</h3>
-              <p className="text-gray-600">All templates are designed to pass through Applicant Tracking Systems</p>
+              <h3 className="text-base sm:text-lg font-semibold mb-2">ATS Optimized</h3>
+              <p className="text-sm sm:text-base text-gray-600">All templates are designed to pass through Applicant Tracking Systems</p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Star className="w-6 h-6 text-green-600" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <Star className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Professional Design</h3>
-              <p className="text-gray-600">Created by professional designers with years of experience</p>
+              <h3 className="text-base sm:text-lg font-semibold mb-2">Professional Design</h3>
+              <p className="text-sm sm:text-base text-gray-600">Created by professional designers with years of experience</p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Crown className="w-6 h-6 text-purple-600" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">Easy Customization</h3>
-              <p className="text-gray-600">Customize colors, fonts, and layouts to match your style</p>
+              <h3 className="text-base sm:text-lg font-semibold mb-2">Easy Customization</h3>
+              <p className="text-sm sm:text-base text-gray-600">Customize colors, fonts, and layouts to match your style</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-primary">
+      <section className="py-12 sm:py-16 lg:py-20 bg-gradient-primary">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-white mb-4">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">
             Ready to Create Your Perfect Resume?
           </h2>
-          <p className="text-xl text-blue-100 mb-8">
+          <p className="text-lg sm:text-xl text-blue-100 mb-6 sm:mb-8">
             Start building your professional resume today with our easy-to-use builder
           </p>
           <Link to="/builder">
-            <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-50 text-lg px-8 py-3">
+            <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-50 text-base sm:text-lg px-6 sm:px-8 py-3 w-full sm:w-auto">
               Start Building Now
             </Button>
           </Link>

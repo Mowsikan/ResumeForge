@@ -1,4 +1,3 @@
-
 import { useResumes } from "@/hooks/useResumes";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthModal } from "@/components/AuthModal";
@@ -20,15 +19,15 @@ const DownloadedResumes = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center max-w-md mx-auto">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">
             Sign in to view your downloaded resumes
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
             Create an account to access your downloaded resumes
           </p>
-          <Button onClick={() => setShowAuthModal(true)}>
+          <Button onClick={() => setShowAuthModal(true)} className="w-full sm:w-auto">
             Sign In / Sign Up
           </Button>
         </div>
@@ -59,8 +58,8 @@ const DownloadedResumes = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading your downloaded resumes...</p>
+          <div className="animate-spin rounded-full h-16 w-16 sm:h-32 sm:w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-sm sm:text-base text-gray-600">Loading your downloaded resumes...</p>
         </div>
       </div>
     );
@@ -68,15 +67,15 @@ const DownloadedResumes = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
+      <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Downloaded Resumes</h1>
-            <p className="text-gray-600 mt-2">Manage your downloaded resume templates</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Downloaded Resumes</h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">Manage your downloaded resume templates</p>
           </div>
           <Button 
             onClick={() => navigate('/builder')}
-            className="bg-gradient-primary hover:opacity-90"
+            className="bg-gradient-primary hover:opacity-90 w-full sm:w-auto"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create New Resume
@@ -84,19 +83,19 @@ const DownloadedResumes = () => {
         </div>
 
         {downloadedResumes.length === 0 ? (
-          <Card className="text-center py-12">
+          <Card className="text-center py-8 sm:py-12">
             <CardContent>
-              <div className="max-w-md mx-auto">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Plus className="w-8 h-8 text-gray-400" />
+              <div className="max-w-md mx-auto px-4">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <Plus className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No downloaded resumes yet</h3>
-                <p className="text-gray-600 mb-6">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">No downloaded resumes yet</h3>
+                <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
                   Purchase and download resume templates to see them here
                 </p>
                 <Button 
                   onClick={() => navigate('/templates')}
-                  className="bg-gradient-primary hover:opacity-90"
+                  className="bg-gradient-primary hover:opacity-90 w-full sm:w-auto"
                 >
                   Browse Templates
                 </Button>
@@ -104,16 +103,16 @@ const DownloadedResumes = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {downloadedResumes.map((resume) => (
               <Card key={resume.id} className="group hover:shadow-lg transition-all duration-200 overflow-hidden">
                 <div className="aspect-[3/4] bg-gradient-to-br from-purple-50 to-pink-100 relative overflow-hidden">
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <div className="w-16 h-20 bg-white rounded-lg shadow-md flex items-center justify-center mb-3 mx-auto">
-                        <span className="text-xl font-bold text-purple-600">CV</span>
+                    <div className="text-center p-3 sm:p-4">
+                      <div className="w-12 h-15 sm:w-16 sm:h-20 bg-white rounded-lg shadow-md flex items-center justify-center mb-2 sm:mb-3 mx-auto">
+                        <span className="text-lg sm:text-xl font-bold text-purple-600">CV</span>
                       </div>
-                      <div className="text-sm text-gray-700 font-medium truncate">
+                      <div className="text-xs sm:text-sm text-gray-700 font-medium truncate">
                         {resume.resume_data.fullName || 'Untitled'}
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
@@ -130,7 +129,7 @@ const DownloadedResumes = () => {
                         onClick={() => handlePreview(resume)}
                         className="bg-white bg-opacity-90 hover:bg-opacity-100"
                       >
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
                       </Button>
                       <Button
                         size="sm"
@@ -138,23 +137,23 @@ const DownloadedResumes = () => {
                         onClick={() => handleEdit(resume.id)}
                         className="bg-white bg-opacity-90 hover:bg-opacity-100"
                       >
-                        <Edit className="w-4 h-4" />
+                        <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
                       </Button>
                     </div>
                   </div>
                 </div>
                 
-                <CardContent className="p-4">
+                <CardContent className="p-3 sm:p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 truncate text-lg">
+                      <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base lg:text-lg">
                         {resume.title}
                       </h3>
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="text-xs sm:text-sm text-gray-500 mt-1">
                         Downloaded {new Date(resume.downloaded_at).toLocaleDateString()}
                       </p>
                       <div className="mt-2">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                           {resume.template_id || 'Modern'} Template
                         </span>
                       </div>
@@ -163,28 +162,28 @@ const DownloadedResumes = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDelete(resume.id)}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50 ml-2"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 ml-2 p-1"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                     </Button>
                   </div>
                   
-                  <div className="flex gap-2 mt-4">
+                  <div className="flex gap-2 mt-3 sm:mt-4">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handlePreview(resume)}
-                      className="flex-1"
+                      className="flex-1 text-xs sm:text-sm"
                     >
-                      <Eye className="w-4 h-4 mr-1" />
+                      <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                       Preview
                     </Button>
                     <Button
                       size="sm"
                       onClick={() => handleEdit(resume.id)}
-                      className="flex-1 bg-gradient-primary hover:opacity-90"
+                      className="flex-1 bg-gradient-primary hover:opacity-90 text-xs sm:text-sm"
                     >
-                      <Edit className="w-4 h-4 mr-1" />
+                      <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                       Edit
                     </Button>
                   </div>
@@ -198,10 +197,10 @@ const DownloadedResumes = () => {
       <Dialog open={showPreviewModal} onOpenChange={setShowPreviewModal}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{selectedResume?.title || 'Resume Preview'}</DialogTitle>
+            <DialogTitle className="text-base sm:text-lg">{selectedResume?.title || 'Resume Preview'}</DialogTitle>
           </DialogHeader>
           {selectedResume && (
-            <div className="bg-white shadow-lg" style={{ transform: 'scale(0.8)', transformOrigin: 'top center' }}>
+            <div className="bg-white shadow-lg" style={{ transform: 'scale(0.6) scale(0.8)', transformOrigin: 'top center' }}>
               <ResumePreview 
                 data={selectedResume.resume_data} 
                 template={selectedResume.template_id || 'modern'} 

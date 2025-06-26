@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -48,40 +47,42 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-w-[95vw] mx-auto">
         <DialogHeader>
-          <DialogTitle>Welcome to ResumeForge</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Welcome to ResumeForge</DialogTitle>
         </DialogHeader>
         
         <Tabs defaultValue="signin" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            <TabsTrigger value="signin" className="text-sm">Sign In</TabsTrigger>
+            <TabsTrigger value="signup" className="text-sm">Sign Up</TabsTrigger>
           </TabsList>
           
           <TabsContent value="signin" className="space-y-4">
             <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="signin-email">Email</Label>
+                <Label htmlFor="signin-email" className="text-sm">Email</Label>
                 <Input
                   id="signin-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className="text-sm"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="signin-password">Password</Label>
+                <Label htmlFor="signin-password" className="text-sm">Password</Label>
                 <Input
                   id="signin-password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  className="text-sm"
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full text-sm" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Sign In
               </Button>
@@ -91,27 +92,29 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
           <TabsContent value="signup" className="space-y-4">
             <form onSubmit={handleSignUp} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="signup-name">Full Name</Label>
+                <Label htmlFor="signup-name" className="text-sm">Full Name</Label>
                 <Input
                   id="signup-name"
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
+                  className="text-sm"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
+                <Label htmlFor="signup-email" className="text-sm">Email</Label>
                 <Input
                   id="signup-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className="text-sm"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="signup-password">Password</Label>
+                <Label htmlFor="signup-password" className="text-sm">Password</Label>
                 <Input
                   id="signup-password"
                   type="password"
@@ -119,9 +122,10 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
+                  className="text-sm"
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full text-sm" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Account
               </Button>
